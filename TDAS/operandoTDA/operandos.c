@@ -22,7 +22,7 @@ int getParametro(MV mv, char op)
     break;
 
   default:
-    parametro = 0;
+    parametro = NULL;
     break;
   }
   return parametro;
