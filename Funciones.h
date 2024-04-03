@@ -1,6 +1,5 @@
 void MOV(int *a, int *b);
 
-
 void ADD(int *a, int *b);
 
 void SUB(int *a, int *b);
@@ -25,4 +24,13 @@ void SHR(int *a, int *b);
 
 void RND(int *a, int *b);
 
+void JMP(int address);
 
+// SYS (agus)
+// JMP
+// jumps
+// ldh carga parate alta de acc
+// ldl carga parte baja
+// NOT
+// STOP (agus)
+// Funcion cambia cc
