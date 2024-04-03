@@ -1,11 +1,11 @@
 
 typedef struct Segmentos
 {
-    short base, size;
+    short int base, size;
 } Segmentos;
 typedef struct MV
 {
-    char memoria[16000];
+    char memoria[16384];
     int registros[16];
     Segmentos tablaSegmentos[8];
 } MV;
