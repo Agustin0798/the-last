@@ -5,40 +5,41 @@
 int getParametro(MV mv, char op)
 { // EJ op=0010 el valor llega con el desplazamiento
 
-  int parametro = 0, value;
-  leerParametro(~op, mv);
+  int parametro, value = 0;
+  parametro = leerParametro(~op, mv);
   switch (op)
   {
   case 0:
-    parametro = memoria(mv, value);
+    value = memoria(mv, parametro);
     break;
 
   case 1:
-    parametro = inmediato(mv, value);
+    value = parametro;
     break;
 
   case 2:
-    parametro = registro(mv, value);
+    value = registro(mv, parametro);
     break;
 
   default:
-    parametro = NULL;
+    value = NULL;
     break;
   }
-  return parametro;
+  return value;
 }
 
-int leerParametro(char op, MV mv)
+int leerParametro(char op, MV mv) // Op ya esta negado(tamano)
 {
   int i, paramValue;
-  for (i = 0; i < op - 1; i++)
+  char aux;
+  for (i = 0; i < op; i++)
   {
-    if (mv.tablaSegmentos[0].size > mv.registros[5])
+    if (mv.tablaSegmentos[0].size > mv.registros[5] + i) // 5 ip
     {
 
-      paramValue = mv.memoria[mv.registros[5] & 0x00ff + i];
-      paramValue = paramValue << 4;
-      mv.registros[5] += i;
+      aux = mv.memoria[mv.registros[5] & 0x0000ffff + i];
+      paramValue = (paramValue << 8) + aux; // byte a byte
+      // mv.registros[5] += i; //Uso ip sin actualizarlo
     }
     else
     {
@@ -49,16 +50,27 @@ int leerParametro(char op, MV mv)
 }
 int memoria(MV mv, int value) // Si
 {
-  char relleno = value >> 20;
-  char codReg = value >> 16;
+  char aux, tamLectura = value >> 20;
+  int i, dato;
+  char codReg = (value >> 16) & 0x0f;
   char offset = value & 0x00ffff; // Tal vez sea innecesario por truncamiento
-  if (mv.tablaSegmentos[1].size > mv.tablaSegmentos[1].base + offset)
+
+  char s;
+  s = mv.registros[codReg] >> 16;
+  int direccionFisica = mv.tablaSegmentos[s].base + mv.registros[codReg] & 0x0000ffff + offset;
+  for (i = 0; i < 4; i++)
   {
-    return mv.memoria[mv.tablaSegmentos[1].base + offset];
-  }
-  else
-  {
-    return NULL; // Segmentation fault
+
+    if (mv.tablaSegmentos[s].base >= direccionFisica && direccionFisica < mv.tablaSegmentos[s].base + mv.tablaSegmentos[s].size)
+    {
+
+      aux = mv.memoria[direccionFisica];
+      dato = (dato << 8) + aux;
+    }
+    else
+    {
+      return NULL; // Segmentation fault
+    }
   }
 }
 
