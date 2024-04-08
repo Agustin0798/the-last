@@ -25,9 +25,9 @@ void SHR(int *a, int *b);
 void RND(int *a, int *b);
 
 void JMP(int address);
-
+void JZ(int address);
 // SYS (agus)
-// JMP
+
 // jumps
 // ldh carga parate alta de acc
 // ldl carga parte baja
