@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 int getParametro(MV mv, char op)
-{ // EJ op=0010 el valor llega con el desplazamiento
+{ // EJ op=0010 el valor llega con el desplazamiento. cambiar para segundo parametro
 
   int parametro, value = 0;
   parametro = leerParametro(~op, mv);
@@ -32,9 +32,9 @@ int leerParametro(char op, MV mv) // Op ya esta negado(tamano)
 {
   int i, paramValue;
   char aux;
-  for (i = 0; i < op; i++)
+  for (i = 1; i <= op; i++)
   {
-    if (mv.tablaSegmentos[0].size > mv.registros[5] + i) // 5 ip
+    if (mv.tablaSegmentos[0].size > mv.registros[5] + i) // 5 ip no hardcodear registro cs parte alta
     {
 
       aux = mv.memoria[mv.registros[5] & 0x0000ffff + i];
@@ -91,7 +91,7 @@ int registro(MV mv, int value)
     return mv.registros[value & 0x0f] & 0x000000ff;
     break;
   case 2:
-    return mv.registros[value & 0x0f] & 0x0000ff00;
+    return (mv.registros[value & 0x0f] & 0x0000ff00) >> 8;
     break;
   case 3:
     return mv.registros[value & 0x0f] & 0x0000ffff;
