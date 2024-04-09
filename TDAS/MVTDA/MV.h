@@ -1,3 +1,4 @@
+#define MaxMem 16384
 
 typedef struct Segmentos
 {
@@ -5,7 +6,7 @@ typedef struct Segmentos
 } Segmentos;
 typedef struct MV
 {
-    char memoria[16384];
-    int registros[16];
-    Segmentos tablaSegmentos[8];
+    char RAM[MaxMem];
+    int Regs[16];
+    Segmentos TDS[8];
 } MV;

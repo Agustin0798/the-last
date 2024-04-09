@@ -3,7 +3,9 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**TDAS/operandoTDA",
+                "${workspaceFolder}/**TDAS/FuncionesTDA",
+                "${workspaceFolder}/**TDAS/MVTDA"
             ],
             "defines": [
                 "_DEBUG",
@@ -12,7 +14,7 @@
             ],
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "windows-msvc-x64",
+            "intelliSenseMode": "windows-gcc-x64",
             "compilerPath": "C:/MinGW/bin/gcc.exe"
         }
     ],
