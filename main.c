@@ -10,15 +10,9 @@ struct
     char verc;
 } header;
 
-typedef struct
-{
-    int valor;
-    char *descripcion;
-} TError;
 
-TError VecError[];
 
-void (*funcion)[24](int *a, int *b, MV mv) = {ADD, MOV};
+void (*funcion[32])(int *a, int *b, MV mv) = {MOV,ADD,SUB,SWAP,MUL,DIV,CMP,SHL,SHR,AND,OR,XOR,RND,VACIO,VACIO,VACIO,SYS,JMP,JZ,JP,JN,JNZ,JNP,JNN,LDL,LDH,NOT,VACIO,VACIO,VACIO,VACIO,STOP};
 
 int Ejecuta(int TamC) // hacerlo int para manejo de errores
 {
