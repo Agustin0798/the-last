@@ -1,13 +1,20 @@
 #define MaxMem 16384
 
-typedef struct Segme
+typedef struct Segmentos
 {
     short int base, size;
-} Segme;
-typedef Segme Segmentos;
+} Segmentos;
+
+typedef struct
+{
+    int valor;
+    char *descripcion;
+} TError;
+
 typedef struct MV
 {
     char RAM[MaxMem];
     int Regs[16];
     Segmentos TDS[8];
+    TError VecError[3];
 } MV;

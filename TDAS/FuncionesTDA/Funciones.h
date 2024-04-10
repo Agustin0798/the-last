@@ -1,4 +1,5 @@
 #include "../MVTDA/MV.h"
+void VACIO(int *a, int *b, MV mv);
 
 void MOV(int *a, int *b, MV mv);
 
@@ -28,7 +29,7 @@ void RND(int *a, int *b, MV mv);
 
 void JMP(int *a, int *b, MV mv);
 void JZ(int *a, int *b, MV mv);
-// SYS (agus)
+void SYS(int *a, int *b, MV mv);
 
 // jumps
 // ldh carga parate alta de acc
