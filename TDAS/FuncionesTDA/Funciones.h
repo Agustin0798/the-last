@@ -26,8 +26,8 @@ void SHR(int *a, int *b, MV mv);
 
 void RND(int *a, int *b, MV mv);
 
-void JMP(int address);
-void JZ(int address);
+void JMP(int *a, int *b, MV mv);
+void JZ(int *a, int *b, MV mv);
 // SYS (agus)
 
 // jumps

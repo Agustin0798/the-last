@@ -10,7 +10,7 @@ int getParametro(MV mv, char op)
   switch (op)
   {
   case 0:
-    value = memoria(mv, parametro);
+    value = RAM(mv, parametro);
     break;
 
   case 1:
@@ -34,12 +34,12 @@ int leerParametro(char op, MV mv) // Op ya esta negado(tamano)
   char aux;
   for (i = 1; i <= op; i++)
   {
-    if (mv.tablaSegmentos[0].size > mv.registros[5] + i) // 5 ip no hardcodear registro cs parte alta
+    if (mv.TDS[0].size > mv.Regs[5] + i) // 5 ip no hardcodear registro cs parte alta
     {
 
-      aux = mv.memoria[mv.registros[5] & 0x0000ffff + i];
+      aux = mv.RAM[mv.Regs[5] & 0x0000ffff + i];
       paramValue = (paramValue << 8) + aux; // byte a byte
-      // mv.registros[5] += i; //Uso ip sin actualizarlo
+      // mv.Regs[5] += i; //Uso ip sin actualizarlo
     }
     else
     {
@@ -56,15 +56,15 @@ int memoria(MV mv, int value) // Si
   char offset = value & 0x00ffff; // Tal vez sea innecesario por truncamiento
 
   char s;
-  s = mv.registros[codReg] >> 16;
-  int direccionFisica = mv.tablaSegmentos[s].base + mv.registros[codReg] & 0x0000ffff + offset;
+  s = mv.Regs[codReg] >> 16;
+  int direccionFisica = mv.TDS[s].base + mv.Regs[codReg] & 0x0000ffff + offset;
   for (i = 0; i < 4; i++)
   {
 
-    if (mv.tablaSegmentos[s].base >= direccionFisica && direccionFisica < mv.tablaSegmentos[s].base + mv.tablaSegmentos[s].size)
+    if (mv.TDS[s].base >= direccionFisica && direccionFisica < mv.TDS[s].base + mv.TDS[s].size)
     {
 
-      aux = mv.memoria[direccionFisica];
+      aux = mv.RAM[direccionFisica];
       dato = (dato << 8) + aux;
     }
     else
@@ -85,16 +85,16 @@ int registro(MV mv, int value)
   switch (secReg)
   {
   case 0:
-    return mv.registros[value & 0x0f];
+    return mv.Regs[value & 0x0f];
     break;
   case 1:
-    return mv.registros[value & 0x0f] & 0x000000ff;
+    return mv.Regs[value & 0x0f] & 0x000000ff;
     break;
   case 2:
-    return (mv.registros[value & 0x0f] & 0x0000ff00) >> 8;
+    return (mv.Regs[value & 0x0f] & 0x0000ff00) >> 8;
     break;
   case 3:
-    return mv.registros[value & 0x0f] & 0x0000ffff;
+    return mv.Regs[value & 0x0f] & 0x0000ffff;
     break;
   }
 }

@@ -18,9 +18,9 @@ typedef struct
 
 TError VecError[];
 
-void (*funcion)[24](int *a, int *b, MV mv) = {ADD, MOV};
+void (*funcion[24])(int *a, int *b, MV mv) = {ADD, MOV};
 
-int Ejecuta(int TamC) // hacerlo int para manejo de errores
+int Ejecuta(int TamC, MV mv) // hacerlo int para manejo de errores
 {
     unsigned char Cod, OP1, OP2, inst = 0;
     int Valor1, Valor2, Iptemp;
@@ -105,14 +105,14 @@ int main(int argc, char *argv[])
                 if (TamC <= MaxMem)
                 {
                     mv.TDS[0].base = 0;
-                    mv.TDS[0].tam = TamC;
+                    mv.TDS[0].size = TamC;
                     mv.TDS[1].base = TamC;
-                    mv.TDS[1].tam = MaxMem - TamC;
+                    mv.TDS[1].size = MaxMem - TamC;
                     mv.Regs[0] = mv.Regs[5] = 0;
                     mv.Regs[1] = 0x00010000;
                     for (i = 0; i < TamC; i++)
                         mv.RAM[i] = fgetc(arch);
-                    Ejecuta(TamC);
+                    Ejecuta(TamC, mv);
                 }
                 else
                     printf("No hay memoria suficiente para almacenar el codigo. ");

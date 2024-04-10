@@ -1,9 +1,10 @@
 #define MaxMem 16384
 
-typedef struct Segmentos
+typedef struct Segme
 {
     short int base, size;
-} Segmentos;
+} Segme;
+typedef Segme Segmentos;
 typedef struct MV
 {
     char RAM[MaxMem];

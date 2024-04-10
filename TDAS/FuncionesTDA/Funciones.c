@@ -79,28 +79,28 @@ void RND(int *a, int *b, MV mv)
 }
 void JMP(int *a, int *b, MV mv)
 {
-    mv.registros[5] = *b;
+    mv.Regs[5] = *b;
 }
 void JZ(int *a, int *b, MV mv)
 {
-    if (mv.registros[8] & 0x40000000 == 0x40000000)
+    if (mv.Regs[8] & 0x40000000 == 0x40000000)
     {
-        mv.registros[5] = *b;
+        mv.Regs[5] = *b;
     }
 }
 
 void JNN(int *a, int *b, MV mv)
 {
-    if (mv.registros[8] & 0x80000000 != 0X80000000)
+    if (mv.Regs[8] & 0x80000000 != 0X80000000)
     {
-        mv.registros[5] = *b;
+        mv.Regs[5] = *b;
     }
 }
 
 void JNP(int *a, int *b, MV mv)
 {
-    if (mv.registros[8] & 0xc0000000 != 0)
+    if (mv.Regs[8] & 0xc0000000 != 0)
     {
-        mv.registros[5] = *b;
+        mv.Regs[5] = *b;
     }
 }
