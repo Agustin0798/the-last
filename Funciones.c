@@ -132,23 +132,41 @@ void JNP(int *a, int *b, MV mv)
 }
 void JP(int *a, int *b, MV mv)
 {
+    if (mv.Regs[8] & 0xc0000000 == 0)
+    {
+        mv.Regs[5] = *b;
+    }
 }
 void JN(int *a, int *b, MV mv)
 {
+
+    if (mv.Regs[8] & 0x80000000 != 0)
+    {
+        mv.Regs[5] = *b;
+    }
 }
 
 void JNZ(int *a, int *b, MV mv)
 {
+
+    if (mv.Regs[8] & 0x40000000 != 0)
+    {
+        mv.Regs[5] = *b;
+    }
 }
 void LDL(int *a, int *b, MV mv)
 {
+    mv.Regs[9] = mv.Regs[9] & 0x0000ffff + *b & 0x0000ffff; // Arrastrar signo, dudas
 }
 void LDH(int *a, int *b, MV mv)
 {
+
+    mv.Regs[9] = mv.Regs[9] & 0xffff0000 + *b & 0x0000ffff; // Arrastrar signo, !Duda
 }
 
 void NOT(int *a, int *b, MV mv)
 {
+    *b = ~(*b);
 }
 
 void STOP(int *a, int *b, MV mv)
