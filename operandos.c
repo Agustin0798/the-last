@@ -2,33 +2,7 @@
 #include "MV.h"
 #include <stdlib.h>
 
-int getParametro(MV mv, char op)
-{ // EJ op=0010 el valor llega con el desplazamiento. cambiar para segundo parametro
-
-  int parametro, value = 0;
-  parametro = leerParametro(~op, mv);
-  switch (op)
-  {
-  case 0:
-    value = RAM(mv, parametro);
-    break;
-
-  case 1:
-    value = parametro;
-    break;
-
-  case 2:
-    value = registro(mv, parametro);
-    break;
-
-  default:
-    value = NULL;
-    break;
-  }
-  return value;
-}
-
-int leerParametro(char op, MV mv) // Op ya esta negado(tamano)
+int leerParametro(MV mv, char op) // Op ya esta negado(tamano)
 {
   int i, paramValue;
   char aux;
@@ -43,7 +17,7 @@ int leerParametro(char op, MV mv) // Op ya esta negado(tamano)
     }
     else
     {
-      return NULL; // Segmentation fault
+      return -1; // CAmbiar Vector de errores; // Segmentation fault
     }
   }
   return paramValue;
@@ -69,7 +43,7 @@ int memoria(MV mv, int value) // Si
     }
     else
     {
-      return NULL; // Segmentation fault
+      return -1; // CAmbiar Vector de errores; // Segmentation fault
     }
   }
 }
@@ -101,4 +75,29 @@ int registro(MV mv, int value)
 
 void setOperando(MV mv, char op)
 {
+}
+int getOperando(MV mv, char op, char ipTemp)
+{ // EJ op=0010 el valor llega con el desplazamiento. cambiar para segundo parametro
+
+  int parametro, value = 0;
+  parametro = leerParametro(mv, ~op);
+  switch (op)
+  {
+  case 0:
+    value = memoria(mv, parametro);
+    break;
+
+  case 1:
+    value = parametro;
+    break;
+
+  case 2:
+    value = registro(mv, parametro);
+    break;
+
+  default:
+    value = -1;
+    break;
+  }
+  return value;
 }
