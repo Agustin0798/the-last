@@ -2,6 +2,9 @@
 #define OPERANDOS_H
 #include "MV.h"
 
-int getParametro(MV mv, char op);
+int getOperando(MV mv, char op, char iptemp);
 void setOperando(MV mv, char op);
+int memoria(MV mv, int value);
+int registro(MV mv, int);
+int leerParametro(MV mv, char op);
 #endif
