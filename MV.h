@@ -4,7 +4,7 @@
 
 typedef struct Segmentos
 {
-    short int base, size;
+    char base, size;
 } Segmentos;
 
 typedef struct
