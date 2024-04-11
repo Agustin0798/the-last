@@ -59,8 +59,8 @@ int Ejecuta(int TamC, MV mv) // hacerlo int para manejo de errores
                     return 1;
                 break;
             }
-            Valor2 = getOperando(mv, OP2); // agregar parametro vector errores
-            Valor1 = getOperando(mv, OP1); // "
+            Valor2 = getOperando(mv, OP2, Iptemp); // agregar parametro vector errores
+            Valor1 = getOperando(mv, OP1, Iptemp); // "
         }
 
         funcion[Cod](&Valor1, &Valor2, mv);
