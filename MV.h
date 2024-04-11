@@ -1,3 +1,5 @@
+#ifndef MV_H
+#define MV_H
 #define MaxMem 16384
 
 typedef struct Segmentos
@@ -18,3 +20,4 @@ typedef struct MV
     Segmentos TDS[8];
     TError VecError[3];
 } MV;
+#endif

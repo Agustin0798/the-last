@@ -1,5 +1,5 @@
 #include "operandos.h"
-#include "../MVTDA/MV.h"
+#include "MV.h"
 #include <stdlib.h>
 
 int getParametro(MV mv, char op)
@@ -97,4 +97,8 @@ int registro(MV mv, int value)
     return mv.Regs[value & 0x0f] & 0x0000ffff;
     break;
   }
+}
+
+void setOperando(MV mv, char op)
+{
 }

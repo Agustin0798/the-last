@@ -1,22 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "TDAS/FuncionesTDA/Funciones.h"
-#include "TDAS/MVTDA/MV.h"
+#include "Funciones.h"
+#include "MV.h"
+#include "operandos.h"
 
 struct
 {
     char *ident;
     char verc;
 } header;
-
-typedef struct
-{
-    int valor;
-    char *descripcion;
-} TError;
-
-TError VecError[];
 
 void (*funcion[32])(int *a, int *b, MV mv) = {MOV, ADD, SUB, SWAP, MUL, DIV, CMP, SHL, SHR, AND, OR, XOR, RND, VACIO, VACIO, VACIO, SYS, JMP, JZ, JP, JN, JNZ, JNP, JNN, LDL, LDH, NOT, VACIO, VACIO, VACIO, VACIO, STOP};
 
