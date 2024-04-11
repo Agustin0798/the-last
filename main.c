@@ -85,35 +85,43 @@ int main(int argc, char *argv[])
     FILE *arch;
     MV mv;
     // inicializar vec de errores;
-    arch = fopen(argv[1], "rb");
-    if (arch != NULL)
+    if (argc <= 1)
     {
-        fgets(header.ident, 5, arch);
-        header.verc = fgetc(arch);
-        if (strcmp(header.ident, "VMX24") == 0)
-            if (header.verc == '1')
-            {
-                fgets(aux, 2, arch);
-                TamC = atoi(aux);
-                if (TamC <= MaxMem)
+        printf("No hay archivo");
+    }
+    else
+    {
+
+        arch = fopen(argv[1], "rb");
+        if (arch != NULL)
+        {
+            fgets(header.ident, 5, arch);
+            header.verc = fgetc(arch);
+            if (strcmp(header.ident, "VMX24") == 0)
+                if (header.verc == '1')
                 {
-                    mv.TDS[0].base = 0;
-                    mv.TDS[0].size = TamC;
-                    mv.TDS[1].base = TamC;
-                    mv.TDS[1].size = MaxMem - TamC;
-                    mv.Regs[0] = mv.Regs[5] = 0;
-                    mv.Regs[1] = 0x00010000;
-                    for (i = 0; i < TamC; i++)
-                        mv.RAM[i] = fgetc(arch);
-                    Ejecuta(TamC, mv);
+                    fgets(aux, 2, arch);
+                    TamC = atoi(aux);
+                    if (TamC <= MaxMem)
+                    {
+                        mv.TDS[0].base = 0;
+                        mv.TDS[0].size = TamC;
+                        mv.TDS[1].base = TamC;
+                        mv.TDS[1].size = MaxMem - TamC;
+                        mv.Regs[0] = mv.Regs[5] = 0;
+                        mv.Regs[1] = 0x00010000;
+                        for (i = 0; i < TamC; i++)
+                            mv.RAM[i] = fgetc(arch);
+                        Ejecuta(TamC, mv);
+                    }
+                    else
+                        printf("No hay memoria suficiente para almacenar el codigo. ");
                 }
                 else
-                    printf("No hay memoria suficiente para almacenar el codigo. ");
-            }
+                    printf("Vercion no valida. ");
             else
-                printf("Vercion no valida. ");
-        else
-            printf("Identificador invalido.");
+                printf("Identificador invalido.");
+        }
+        return 0;
     }
-    return 0;
 }
