@@ -130,7 +130,30 @@ void JNP(int *a, int *b, MV mv)
         mv.Regs[5] = *b;
     }
 }
+void JP(int *a, int *b, MV mv)
+{
+}
+void JN(int *a, int *b, MV mv)
+{
+}
 
+void JNZ(int *a, int *b, MV mv)
+{
+}
+void LDL(int *a, int *b, MV mv)
+{
+}
+void LDH(int *a, int *b, MV mv)
+{
+}
+
+void NOT(int *a, int *b, MV mv)
+{
+}
+
+void STOP(int *a, int *b, MV mv)
+{
+}
 void SYS(int *a, int *b, MV mv)
 {
     unsigned int dir = mv.Regs[13];                        // EDX
