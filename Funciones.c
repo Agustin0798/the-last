@@ -156,12 +156,14 @@ void JNZ(int *a, int *b, MV mv)
 }
 void LDL(int *a, int *b, MV mv)
 {
-    mv.Regs[9] = mv.Regs[9] & 0x0000ffff + *b & 0x0000ffff; // Arrastrar signo, dudas
+    mv.Regs[9]=(mv.Regs[9]|0x0000ffff)& (short int) (0x8000 | (*b)&0xffff);
+    
 }
 void LDH(int *a, int *b, MV mv)
 {
 
-    mv.Regs[9] = mv.Regs[9] & 0xffff0000 + *b & 0x0000ffff; // Arrastrar signo, !Duda
+
+    mv.Regs[9]= (mv.Regs[9]&0x0000ffff)+ (( 0x8000 |((*b)&0xffff))<<16);
 }
 
 void NOT(int *a, int *b, MV mv)
