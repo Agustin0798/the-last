@@ -18,13 +18,13 @@ int Ejecuta(int TamC, MV mv) // hacerlo int para manejo de errores
     unsigned char Cod, OP1, OP2, inst = 0;
     int Valor1, Valor2, Iptemp;
 
-    inst = mv.RAM[mv.Regs[5]];
-    while (mv.Regs[5] < TamC - 1 && inst != 0xFFFF) // Simplificar codOp no lo permite
+    inst = mv.RAM[mv.Regs[IP]];
+    while (mv.Regs[IP] < TamC - 1 && inst != 0xFFFF) // Simplificar codOp no lo permite
     {
         Cod = inst & 0b00011111;
         OP1 = (inst >> 4) & 0x3;
         OP2 = (inst >> 6) & 0x3;                             // Busca Operandos
-        mv.Regs[5] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
+        mv.Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
         if ((Cod >> 4) == 0)
         {
             switch (Cod & 0b01111)
@@ -67,9 +67,9 @@ int Ejecuta(int TamC, MV mv) // hacerlo int para manejo de errores
         // Llamar funcion
         // Guardar datos
         // Manejo de Errores
-        inst = mv.RAM[mv.Regs[5]];
+        inst = mv.RAM[mv.Regs[IP]];
     }
-    if (mv.Regs[5] >= TamC)
+    if (mv.Regs[IP] >= TamC)
     {
         // modificar vec errores
         return 1;
@@ -105,11 +105,11 @@ int main(int argc, char *argv[])
                     if (TamC <= MaxMem)
                     {
                         mv.TDS[0].base = 0;
-                        mv.TDS[0].size = TamC;
+                        mv.TDS[0].tam= TamC;
                         mv.TDS[1].base = TamC;
-                        mv.TDS[1].size = MaxMem - TamC;
-                        mv.Regs[0] = mv.Regs[5] = 0;
-                        mv.Regs[1] = 0x00010000;
+                        mv.TDS[1].tam = MaxMem - TamC;
+                        mv.Regs[CS] = mv.Regs[5] = 0;
+                        mv.Regs[DS] = 0x00010000;
                         for (i = 0; i < TamC; i++)
                             mv.RAM[i] = fgetc(arch);
                         Ejecuta(TamC, mv);

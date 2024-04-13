@@ -7,12 +7,12 @@
 
 void modificaCC(int *a, MV mv)
 {
-    if (*a < 0)
-        mv.Regs[8] = 0x80000000;
+    if ((*a) < 0)
+        mv.Regs[IP] = 0x80000000 + (mv.Regs[IP] & 0x3FFFFFFF);
     else if (*a == 0)
-        mv.Regs[8] = 0x40000000;
+        mv.Regs[IP] = 0x40000000 + (mv.Regs[IP] & 0x3FFFFFFF);
     else
-        mv.Regs[8] = 0x00000000;
+        mv.Regs[IP] = 0x00000000 + (mv.Regs[IP] & 0x3FFFFFFF);
 }
 
 void VACIO(int *a, int *b, MV mv)
@@ -105,65 +105,63 @@ void RND(int *a, int *b, MV mv)
 }
 void JMP(int *a, int *b, MV mv)
 {
-    mv.Regs[5] = *b;
+    mv.Regs[IP] = *b;
 }
 void JZ(int *a, int *b, MV mv)
 {
-    if (mv.Regs[8] & 0x40000000 == 0x40000000)
+    if (mv.Regs[CC] & 0x40000000 == 0x40000000)
     {
-        mv.Regs[5] = *b;
+        mv.Regs[IP] = *b;
     }
 }
 
 void JNN(int *a, int *b, MV mv)
 {
-    if (mv.Regs[8] & 0x80000000 != 0X80000000)
+    if (mv.Regs[CC] & 0x80000000 != 0X80000000)
     {
-        mv.Regs[5] = *b;
+        mv.Regs[IP] = *b;
     }
 }
 
 void JNP(int *a, int *b, MV mv)
 {
-    if (mv.Regs[8] & 0xc0000000 != 0)
+    if (mv.Regs[CC] & 0xc0000000 != 0)
     {
-        mv.Regs[5] = *b;
+        mv.Regs[IP] = *b;
     }
 }
 void JP(int *a, int *b, MV mv)
 {
-    if (mv.Regs[8] & 0xc0000000 == 0)
+    if (mv.Regs[CC] & 0xc0000000 == 0)
     {
-        mv.Regs[5] = *b;
+        mv.Regs[IP] = *b;
     }
 }
 void JN(int *a, int *b, MV mv)
 {
 
-    if (mv.Regs[8] & 0x80000000 != 0)
+    if (mv.Regs[CC] & 0x80000000 != 0)
     {
-        mv.Regs[5] = *b;
+        mv.Regs[IP] = *b;
     }
 }
 
 void JNZ(int *a, int *b, MV mv)
 {
 
-    if (mv.Regs[8] & 0x40000000 != 0)
+    if (mv.Regs[CC] & 0x40000000 != 0)
     {
-        mv.Regs[5] = *b;
+        mv.Regs[IP] = *b;
     }
 }
 void LDL(int *a, int *b, MV mv)
 {
-    mv.Regs[9]=(mv.Regs[9]|0x0000ffff)& (short int) (0x8000 | (*b)&0xffff);
+    mv.Regs[AC]=(mv.Regs[AC]|0x0000ffff)& (short int) (0x8000 | (*b)&0xffff);
     
 }
 void LDH(int *a, int *b, MV mv)
 {
-
-
-    mv.Regs[9]= (mv.Regs[9]&0x0000ffff)+ (( 0x8000 |((*b)&0xffff))<<16);
+    mv.Regs[AC]= (mv.Regs[AC]&0x0000ffff)+ (( 0x8000 |((*b)&0xffff))<<16);
 }
 
 void NOT(int *a, int *b, MV mv)
@@ -176,15 +174,96 @@ void STOP(int *a, int *b, MV mv)
 }
 void SYS(int *a, int *b, MV mv)
 {
-    unsigned int dir = mv.Regs[13];                        // EDX
-    unsigned int tamCel = (mv.Regs[12] >> 8) & 0x000000FF; // CH
-    unsigned int cantCel = mv.Regs[12] & 0x000000FF;       // CL
-    unsigned int modSys = mv.Regs[10] & 0x000000FF;
+    unsigned int dirFis,dirLog=mv.Regs[EDX],seg,offset;
+    unsigned int tamCel = (mv.Regs[ECX] >> 8) & 0x000000FF;
+    unsigned int cantCel = mv.Regs[ECX] & 0x000000FF;
+    unsigned int modSys = mv.Regs[EAX] & 0x000000FF;
+    int i,j;
+    int dato;
 
     switch (*b)
     {
-    case 1:
+        case 1:
+                seg=dirLog >> 16;
+                offset=dirLog & 0x0000FFFF;
+                if (seg < 5) // direccion logica valida (puede acceder a un elemento de la TDS)
+                {
+                    dirFis=mv.TDS[seg].base+offset;
+                    for (i=0; i<cantCel; i++)
+                    {
+                        switch (modSys)
+                        {
+                            case 1: scanf("%d \n",&dato);
+                                break;
+                            case 2: scanf("%c \n",&dato);
+                                break;
+                            case 4: scanf("%o \n",&dato);
+                                break;
+                            case 8: scanf("%x \n",&dato);
+                                break;
+                        }
+                        if (dato < 0)
+                        {
+                            for (j=0; j<tamCel-1; j++)
+                                if ((dirFis+j >= mv.TDS[seg].base) && (dirFis+j < mv.TDS[seg].base+mv.TDS[seg].tam))
+                                    mv.RAM[dirFis+j]=0xFF;
+                                else
+                                    //error, direccion fisica invalida
+                            mv.RAM[dirFis+tamCel-1]=dato;
+                        }
+                        else
+                        {
+                            for (j=0; j<tamCel-1; j++)
+                                if ((dirFis+j >= mv.TDS[seg].base) && (dirFis+j < mv.TDS[seg].base+mv.TDS[seg].tam))
+                                    mv.RAM[dirFis+j]=0x00;
+                                else
+                                    //error, direccion fisica invalida
+                            mv.RAM[dirFis+tamCel-1]=dato;
+                        }
+                        dirFis+=tamCel; // me muevo para guardar el siguiente dato ingresado
+                    }
+                }
+                else
+                    //direccion logicca invalida
+            break;
+        case 2:
+                seg=dirLog >> 16;
+                offset=dirLog & 0x0000FFFF;
+                dato=0;
+                if (seg < 5) // direccion logica valida (puede acceder a un elemento de la TDS)
+                {
+                    dirFis=mv.TDS[seg].base+offset;
+                    for (i=0; i<cantCel; i++)   //muestra los datos
+                    {
+                        for (j=0; j<tamCel; j++) // arma los datos
+                        {
+                            if ((dirFis+j >= mv.TDS[seg].base) && (dirFis+j < mv.TDS[seg].base+mv.TDS[seg].tam))
+                            {
+                                dato+=mv.RAM[dirFis+j];
+                                if (j < tamCel-1)
+                                    dato=dato << 8;
+                            }
+                            else
+                            {
+                                //error, direccion fisica invalida
+                            }
+                        }
+                        switch (modSys)
+                        {
+                            case 1: printf("%d \n",dato);
+                                break;
+                            case 2: printf("%c \n",dato);
+                                break;
+                            case 4: printf("%o \n",dato);
+                                break;
+                            case 8: printf("%x \n",dato);
+                                break;
+                        }
+                    }
+                }
+                else
+                    //direccion logicca invalida
+            break;
 
-        break;
     }
 }
