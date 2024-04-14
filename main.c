@@ -16,14 +16,16 @@ void (*funcion[32])(int *a, int *b, MV mv) = {MOV, ADD, SUB, SWAP, MUL, DIV, CMP
 int Ejecuta(int TamC, MV mv) // hacerlo int para manejo de errores
 {
     unsigned char Cod, OP1, OP2, inst = 0;
+
     int Valor1, Valor2, Iptemp;
 
     inst = mv.RAM[mv.Regs[IP]];
+    printf("Entra en ejecuta");
     while (mv.Regs[IP] < TamC - 1 && inst != 0xFFFF) // Simplificar codOp no lo permite
     {
         Cod = inst & 0b00011111;
         OP1 = (inst >> 4) & 0x3;
-        OP2 = (inst >> 6) & 0x3;                             // Busca Operandos
+        OP2 = (inst >> 6) & 0x3;                              // Busca Operandos
         mv.Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
         if ((Cod >> 4) == 0)
         {
@@ -64,6 +66,7 @@ int Ejecuta(int TamC, MV mv) // hacerlo int para manejo de errores
         }
 
         funcion[Cod](&Valor1, &Valor2, mv);
+        printf("%d", Valor1);
         // Llamar funcion
         // Guardar datos
         // Manejo de Errores
@@ -84,6 +87,7 @@ int main(int argc, char *argv[])
     int TamC, i;
     FILE *arch;
     MV mv;
+    printf("Iniciando...");
     // inicializar vec de errores;
     if (argc <= 1)
     {
@@ -95,17 +99,21 @@ int main(int argc, char *argv[])
         arch = fopen(argv[1], "rb");
         if (arch != NULL)
         {
+            printf("\nAbriendo Archivo...");
             fgets(header.ident, 5, arch);
+            printf("\n%s", header.ident);
             header.verc = fgetc(arch);
             if (strcmp(header.ident, "VMX24") == 0)
                 if (header.verc == '1')
                 {
+
+                    printf("\nLeyendo Archivo...");
                     fgets(aux, 2, arch);
                     TamC = atoi(aux);
                     if (TamC <= MaxMem)
                     {
                         mv.TDS[0].base = 0;
-                        mv.TDS[0].tam= TamC;
+                        mv.TDS[0].tam = TamC;
                         mv.TDS[1].base = TamC;
                         mv.TDS[1].tam = MaxMem - TamC;
                         mv.Regs[CS] = mv.Regs[5] = 0;

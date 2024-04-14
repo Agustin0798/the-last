@@ -8,7 +8,7 @@ int leerParametro(MV mv, char op) // Op ya esta negado(tamano)
   char aux;
   for (i = 1; i <= op; i++)
   {
-    if (mv.TDS[0].size > mv.Regs[5] + i) // 5 ip no hardcodear registro cs parte alta
+    if (mv.TDS[0].tam > mv.Regs[5] + i) // 5 ip no hardcodear registro cs parte alta
     {
 
       aux = mv.RAM[mv.Regs[5] & 0x0000ffff + i];
@@ -35,7 +35,7 @@ int memoria(MV mv, int value) // Si
   for (i = 0; i < 4; i++)
   {
 
-    if (mv.TDS[s].base >= direccionFisica && direccionFisica < mv.TDS[s].base + mv.TDS[s].size)
+    if (mv.TDS[s].base >= direccionFisica && direccionFisica < mv.TDS[s].base + mv.TDS[s].tam)
     {
 
       aux = mv.RAM[direccionFisica];

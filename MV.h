@@ -15,7 +15,7 @@
 
 typedef struct Segmentos
 {
-    short int base, size;
+    short int base, tam;
 } Segmentos;
 
 typedef struct
