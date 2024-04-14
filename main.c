@@ -7,7 +7,7 @@
 
 struct
 {
-    char *ident;
+    char ident[6];
     char verc;
 } header;
 
@@ -100,11 +100,12 @@ int main(int argc, char *argv[])
         if (arch != NULL)
         {
             printf("\nAbriendo Archivo...");
-            fgets(header.ident, 5, arch);
+            fgets(header.ident, 6, arch);
             printf("\n%s", header.ident);
             header.verc = fgetc(arch);
+            printf("\n%x", header.verc);
             if (strcmp(header.ident, "VMX24") == 0)
-                if (header.verc == '1')
+                if (header.verc == 0x01)
                 {
 
                     printf("\nLeyendo Archivo...");
@@ -123,12 +124,12 @@ int main(int argc, char *argv[])
                         Ejecuta(TamC, mv);
                     }
                     else
-                        printf("No hay memoria suficiente para almacenar el codigo. ");
+                        printf("\nNo hay memoria suficiente para almacenar el codigo. ");
                 }
                 else
-                    printf("Vercion no valida. ");
+                    printf("\nVercion no valida. ");
             else
-                printf("Identificador invalido.");
+                printf("\nIdentificador invalido.");
         }
         return 0;
     }
