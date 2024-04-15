@@ -43,7 +43,8 @@ int memoria(MV mv, int value) // Si
     }
     else
     {
-      return -1; // CAmbiar Vector de errores; // Segmentation fault
+        mv.VecError[2].valor=1;
+        return -1; // CAmbiar Vector de errores; // Segmentation fault
     }
   }
 }
@@ -73,7 +74,7 @@ int registro(MV mv, int value)
   }
 }
 
-void setOperando(MV mv, char op)
+void setOperando(MV mv, char op, int dato)
 {
 }
 int getOperando(MV mv, char op, char ipTemp)

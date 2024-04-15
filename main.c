@@ -7,74 +7,67 @@
 
 struct
 {
-    char ident[6];
+    char *ident;
     char verc;
 } header;
 
 void (*funcion[32])(int *a, int *b, MV mv) = {MOV, ADD, SUB, SWAP, MUL, DIV, CMP, SHL, SHR, AND, OR, XOR, RND, VACIO, VACIO, VACIO, SYS, JMP, JZ, JP, JN, JNZ, JNP, JNN, LDL, LDH, NOT, VACIO, VACIO, VACIO, VACIO, STOP};
 
+int Errores(MV mv)
+{
+    int i=0,e=0;
+
+    while (i<4 && !e)
+        if (mv.VecError[i].valor == 1)
+            e=1;
+        else
+            i++;
+    return e;
+}
+
 int Ejecuta(int TamC, MV mv) // hacerlo int para manejo de errores
 {
     unsigned char Cod, OP1, OP2, inst = 0;
-
     int Valor1, Valor2, Iptemp;
 
     inst = mv.RAM[mv.Regs[IP]];
-    printf("Entra en ejecuta");
     while (mv.Regs[IP] < TamC - 1 && inst != 0xFFFF) // Simplificar codOp no lo permite
     {
         Cod = inst & 0b00011111;
         OP1 = (inst >> 4) & 0x3;
-        OP2 = (inst >> 6) & 0x3;                              // Busca Operandos
+        OP2 = (inst >> 6) & 0x3;                             // Busca Operandos
+        if ((Cod == 0x03 || Cod == 0x1A) && OP2 == 0b01)  // Si cod=0x03 (swap) o cod=0x1A(not) el op1 no puede ser inme
+            return 1;                                      //por superposicion de bits => solo reviso op2
+        Iptemp = 0;
+        Valor2 = getOperando(mv, OP2, Iptemp);
+        Iptemp = (~OP2) & 0x03;
+        Valor1 = getOperando(mv, OP1, Iptemp);
+        if (Errores(mv))
+            return 1;
         mv.Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
-        if ((Cod >> 4) == 0)
+        funcion[Cod](&Valor1, &Valor2, mv); // Llamar funcion
+        if (Errores(mv))
+            return 1;
+        if ((Cod & 0b10000) == 0b00000 && Cod != 0x06)  // dos operandos y distinto de cmp
         {
-            switch (Cod & 0b01111)
-            {
-            case 3:
-                if (OP1 == 0b01 && OP2 == 0b01)
-                    return 1;
-                break;
-            case 6: // Consulta
-                break;
-            default: // op1 no inmediato
-                if (OP1 == 0b01)
-                    return 1;
-                break;
-            }
-            Iptemp = 0;
-            Valor2 = getOperando(mv, OP2, Iptemp); // agregar parametro vector errores
-            Iptemp = (~OP2) & 0x03;
-            Valor1 = getOperando(mv, OP1, Iptemp); // agregar parametro vector errores"  modificar parametros getoperando
-            if (Cod == 5 && Valor2 == 0)
-            {
-                // modifcar vec errores
+            setOperando(mv,OP1,Valor1);
+            if (Cod == 0x03)
+                setOperando(mv,OP2,Valor2);
+            if (Errores(mv))
                 return 1;
-            }
         }
         else
-        {
-            switch (Cod & 0b01111)
+            if (Cod == 0x1A)  // operacion not
             {
-            case 26:
-                if (OP2 == 0b01)
+                setOperando(mv,OP2,Valor2);
+                if (Errores(mv))
                     return 1;
-                break;
             }
-            Valor2 = getOperando(mv, OP2, Iptemp); // agregar parametro vector errores
-            Valor1 = getOperando(mv, OP1, Iptemp); // "
-        }
-
-        funcion[Cod](&Valor1, &Valor2, mv);
-        printf("%d", Valor1);
-        // Llamar funcion
-        // Guardar datos
-        // Manejo de Errores
         inst = mv.RAM[mv.Regs[IP]];
     }
     if (mv.Regs[IP] >= TamC)
     {
-        // modificar vec errores
+        mv.VecError[2].valor=1; // error fallo de segmento
         return 1;
     }
     else
@@ -122,6 +115,8 @@ int main(int argc, char *argv[])
                         for (i = 0; i < TamC; i++)
                             mv.RAM[i] = fgetc(arch);
                         Ejecuta(TamC, mv);
+                        for (i=0; i<4; i++)
+                            printf("%s \n",mv.VecError[i].descripcion);
                     }
                     else
                         printf("\nNo hay memoria suficiente para almacenar el codigo. ");

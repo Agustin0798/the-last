@@ -52,7 +52,7 @@ void DIV(int *a, int *b, MV mv)
         modificaCC(a, mv);
     }
     else
-        printf("Error divicion por 0"); // solucion preliminar para manejo de error
+        mv.VecError[0].valor=1; // solucion preliminar para manejo de error
 }
 
 void SWAP(int *a, int *b, MV mv) // no debe aceptar operandos inmediatos
@@ -109,7 +109,7 @@ void JMP(int *a, int *b, MV mv)
 }
 void JZ(int *a, int *b, MV mv)
 {
-    if (mv.Regs[CC] & 0x40000000 == 0x40000000)
+    if ((mv.Regs[CC] & 0x40000000) == 0x40000000)
     {
         mv.Regs[IP] = *b;
     }
@@ -117,7 +117,7 @@ void JZ(int *a, int *b, MV mv)
 
 void JNN(int *a, int *b, MV mv)
 {
-    if (mv.Regs[CC] & 0x80000000 != 0X80000000)
+    if ((mv.Regs[CC] & 0x80000000) != 0X80000000)
     {
         mv.Regs[IP] = *b;
     }
@@ -125,14 +125,14 @@ void JNN(int *a, int *b, MV mv)
 
 void JNP(int *a, int *b, MV mv)
 {
-    if (mv.Regs[CC] & 0xc0000000 != 0)
+    if ((mv.Regs[CC] & 0xc0000000) != 0)
     {
         mv.Regs[IP] = *b;
     }
 }
 void JP(int *a, int *b, MV mv)
 {
-    if (mv.Regs[CC] & 0xc0000000 == 0)
+    if ((mv.Regs[CC] & 0xc0000000) == 0)
     {
         mv.Regs[IP] = *b;
     }
@@ -140,7 +140,7 @@ void JP(int *a, int *b, MV mv)
 void JN(int *a, int *b, MV mv)
 {
 
-    if (mv.Regs[CC] & 0x80000000 != 0)
+    if ((mv.Regs[CC] & 0x80000000) != 0)
     {
         mv.Regs[IP] = *b;
     }
@@ -149,15 +149,15 @@ void JN(int *a, int *b, MV mv)
 void JNZ(int *a, int *b, MV mv)
 {
 
-    if (mv.Regs[CC] & 0x40000000 != 0)
+    if ((mv.Regs[CC] & 0x40000000) != 0)
     {
         mv.Regs[IP] = *b;
     }
 }
 void LDL(int *a, int *b, MV mv)
 {
-    mv.Regs[AC]=(mv.Regs[AC]|0x0000ffff)& (short int) (0x8000 | (*b)&0xffff);
-    
+    mv.Regs[AC]=(mv.Regs[AC]|0x0000ffff)& (short int) (0x8000 | ((*b)&0xffff));
+
 }
 void LDH(int *a, int *b, MV mv)
 {
@@ -208,7 +208,7 @@ void SYS(int *a, int *b, MV mv)
                                 if ((dirFis+j >= mv.TDS[seg].base) && (dirFis+j < mv.TDS[seg].base+mv.TDS[seg].tam))
                                     mv.RAM[dirFis+j]=0xFF;
                                 else
-                                    //error, direccion fisica invalida
+                                    mv.VecError[2].valor=1; // error fallo de segmento
                             mv.RAM[dirFis+tamCel-1]=dato;
                         }
                         else
@@ -217,14 +217,14 @@ void SYS(int *a, int *b, MV mv)
                                 if ((dirFis+j >= mv.TDS[seg].base) && (dirFis+j < mv.TDS[seg].base+mv.TDS[seg].tam))
                                     mv.RAM[dirFis+j]=0x00;
                                 else
-                                    //error, direccion fisica invalida
+                                    mv.VecError[2].valor=1; // error fallo de segmento
                             mv.RAM[dirFis+tamCel-1]=dato;
                         }
                         dirFis+=tamCel; // me muevo para guardar el siguiente dato ingresado
                     }
                 }
                 else
-                    //direccion logicca invalida
+                    mv.VecError[3].valor=1; // dir log invalida
             break;
         case 2:
                 seg=dirLog >> 16;
@@ -245,7 +245,7 @@ void SYS(int *a, int *b, MV mv)
                             }
                             else
                             {
-                                //error, direccion fisica invalida
+                                mv.VecError[2].valor=1; // error fallo de segmento
                             }
                         }
                         switch (modSys)
@@ -262,7 +262,7 @@ void SYS(int *a, int *b, MV mv)
                     }
                 }
                 else
-                    //direccion logicca invalida
+                    mv.VecError[3].valor=1; // dir log invalida
             break;
 
     }
