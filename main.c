@@ -81,7 +81,15 @@ int main(int argc, char *argv[])
     FILE *arch;
     MV mv;
     printf("Iniciando...");
-    // inicializar vec de errores;
+    for (i=0; i<4; i++)
+    {
+        mv.VecError[i].valor=0;
+    }
+    mv.VecError[0].descripcion="Instruccion invalida";
+    mv.VecError[1].descripcion="Divicion por cero";
+    mv.VecError[2].descripcion="Fallo de segmento";
+    mv.VecError[3].descripcion="Direccion logica invalida";
+
     if (argc <= 1)
     {
         printf("No hay archivo");
