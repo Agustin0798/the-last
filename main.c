@@ -27,31 +27,31 @@ int Errores(MV mv)
 
 int Ejecuta(int TamC, MV mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de errores
 {
-    unsigned char Cod, OP1, OP2, inst = 0;
+    char Cod, OP1, OP2, inst = 0;
     int Valor1, Valor2, Iptemp;
 
     inst = mv.RAM[mv.Regs[IP]];
     printf("\nEjecutando...");
-    printf("\n%d", mv.Regs[IP]);
     while (mv.Regs[IP] < TamC - 1 && inst != 0xFFFF) // Simplificar codOp no lo permite
     {
         Cod = inst & 0b00011111;
-        OP1 = (inst >> 4) & 0x3;
-        OP2 = (inst >> 6) & 0x3; // Busca Operandos
-        printf("\n%x %x %x ", Cod, OP1, OP2);
+
+        OP1 = (inst >> 4) & 0x03;
+        OP2 = (inst >> 6) & 0x03;
+        printf("\n%x  %x", OP2, OP1);
+        // Busca Operandos
         if ((Cod == 0x03 || Cod == 0x1A) && OP2 == 0b01) // Si cod=0x03 (swap) o cod=0x1A(not) el op1 no puede ser inme
             return 1;                                    // por superposicion de bits => solo reviso op2
         Iptemp = 0;
         Valor2 = getOperando(mv, OP2, Iptemp);
         Iptemp = (~OP2) & 0x03;
         Valor1 = getOperando(mv, OP1, Iptemp);
-        printf("\n%s | %x  |%x", codigosOperacion[Cod], Valor1, Valor2);
-        printf("\n%d", getOperando(mv, ~OP1, Iptemp));
+        printf("\n%s | %d  |%d", codigosOperacion[Cod], Valor1, Valor2);
+
         if (Errores(mv))
             return 1;
 
         funcion[Cod](&Valor1, &Valor2, mv);
-        printf("%d", getOperando(mv, ~OP1, Iptemp));
         mv.Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
         if (Errores(mv))
             return 1;
@@ -132,7 +132,6 @@ int main(int argc, char *argv[])
     }
     else
     {
-
         arch = fopen(argv[1], "rb");
         if (arch != NULL)
         {
@@ -141,10 +140,8 @@ int main(int argc, char *argv[])
             printf("\n%s", header.ident);
             fread(&header.verc, 1, 1, arch);
             printf("\n%x", header.verc);
-
+            fread(&aux, 1, 2, arch);
             printf("\nLeyendo Archivo...");
-            printf("\n%d", fread(&aux, 1, 2, arch));
-            printf("\n%c %d", aux[1], atoi(aux));
             sscanf(aux, "%x", &TamC);
             if (strcmp(header.ident, "VMX24") == 0)
                 if (header.verc == 0x01)
@@ -161,9 +158,7 @@ int main(int argc, char *argv[])
                         mv.Regs[DS] = 0x00010000;
                         for (i = 0; i < TamC; i++)
                         {
-
                             fread(&mv.RAM[i], 1, 1, arch);
-                            printf("\n%x %s", mv.RAM[i], codigosOperacion[mv.RAM[i]]);
                         }
 
                         Ejecuta(TamC, mv, codigosOperacion);
