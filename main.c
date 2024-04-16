@@ -33,23 +33,26 @@ int Ejecuta(int TamC, MV mv, CodOpe codigosOperacion[32]) // hacerlo int para ma
     inst = mv.RAM[mv.Regs[IP]];
     printf("\nEjecutando...");
     printf("\n%d", mv.Regs[IP]);
-    printf("\n%d", TamC);
     while (mv.Regs[IP] < TamC - 1 && inst != 0xFFFF) // Simplificar codOp no lo permite
     {
         Cod = inst & 0b00011111;
-        printf("\n%s", codigosOperacion[Cod]);
         OP1 = (inst >> 4) & 0x3;
-        OP2 = (inst >> 6) & 0x3;                         // Busca Operandos
+        OP2 = (inst >> 6) & 0x3; // Busca Operandos
+        printf("\n%x %x %x ", Cod, OP1, OP2);
         if ((Cod == 0x03 || Cod == 0x1A) && OP2 == 0b01) // Si cod=0x03 (swap) o cod=0x1A(not) el op1 no puede ser inme
             return 1;                                    // por superposicion de bits => solo reviso op2
         Iptemp = 0;
         Valor2 = getOperando(mv, OP2, Iptemp);
         Iptemp = (~OP2) & 0x03;
         Valor1 = getOperando(mv, OP1, Iptemp);
+        printf("\n%s | %x  |%x", codigosOperacion[Cod], Valor1, Valor2);
+        printf("\n%d", getOperando(mv, ~OP1, Iptemp));
         if (Errores(mv))
             return 1;
+
+        funcion[Cod](&Valor1, &Valor2, mv);
+        printf("%d", getOperando(mv, ~OP1, Iptemp));
         mv.Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
-        funcion[Cod](&Valor1, &Valor2, mv);                   // Llamar funcion
         if (Errores(mv))
             return 1;
         if ((Cod & 0b10000) == 0b00000 && Cod != 0x06) // dos operandos y distinto de cmp
@@ -157,7 +160,12 @@ int main(int argc, char *argv[])
                         mv.Regs[CS] = mv.Regs[5] = 0;
                         mv.Regs[DS] = 0x00010000;
                         for (i = 0; i < TamC; i++)
-                            mv.RAM[i] = fgetc(arch);
+                        {
+
+                            fread(&mv.RAM[i], 1, 1, arch);
+                            printf("\n%x %s", mv.RAM[i], codigosOperacion[mv.RAM[i]]);
+                        }
+
                         Ejecuta(TamC, mv, codigosOperacion);
                         for (i = 0; i < 4; i++)
                             mv.VecError[i].valor == 0 ? printf("") : printf("%s \n", mv.VecError[i].descripcion);

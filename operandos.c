@@ -8,10 +8,10 @@ int leerParametro(MV mv, char op) // Op ya esta negado(tamano)
   char aux;
   for (i = 1; i <= op; i++)
   {
-    if (mv.TDS[0].tam > mv.Regs[5] + i) // 5 ip no hardcodear registro cs parte alta
+    if (mv.TDS[mv.Regs[CS]].tam > mv.Regs[5] + i) // 5 ip no hardcodear registro cs parte alta
     {
-
       aux = mv.RAM[mv.Regs[5] & 0x0000ffff + i];
+      printf("\n%d", aux);
       paramValue = (paramValue << 8) + aux; // byte a byte
       // mv.Regs[5] += i; //Uso ip sin actualizarlo
     }
@@ -43,8 +43,8 @@ int memoria(MV mv, int value) // Si
     }
     else
     {
-        mv.VecError[2].valor=1;
-        return -1; // CAmbiar Vector de errores; // Segmentation fault
+      mv.VecError[2].valor = 1;
+      return -1; // CAmbiar Vector de errores; // Segmentation fault
     }
   }
 }
