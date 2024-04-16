@@ -10,13 +10,11 @@ int leerParametro(MV mv, char op, char ipTemp) // Op ya esta negado(tamano)
 
   for (i = 1; i <= op; i++)
   {
-    printf("\n");
     if (mv.TDS[mv.Regs[CS]].tam > mv.Regs[IP] + ipTemp + i)
     {
 
       aux = mv.RAM[(mv.Regs[IP] & 0x0000ffff) + ipTemp + i];
       paramValue = (paramValue << 8) + aux; // byte a byte
-      printf("\n%d AUX", paramValue);
       // mv.Regs[5] += i; //Uso ip sin actualizarlo
     }
     else
@@ -86,7 +84,6 @@ int getOperando(MV mv, char op, char ipTemp)
 
   int parametro, value = 0;
   parametro = leerParametro(mv, (~op) & 0x03, ipTemp); // Parametro necesario para dissambler
-  printf("\n%x  TAMANO", (~op) & 0x03);
   switch (op)
   {
   case 0:
@@ -94,12 +91,10 @@ int getOperando(MV mv, char op, char ipTemp)
     break;
 
   case 1:
-    printf("\nInmediato");
     value = parametro;
     break;
 
   case 2:
-    printf("\nregistro");
     value = registro(mv, parametro);
     break;
 

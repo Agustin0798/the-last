@@ -31,14 +31,12 @@ int Ejecuta(int TamC, MV mv, CodOpe codigosOperacion[32]) // hacerlo int para ma
     int Valor1, Valor2, Iptemp;
 
     inst = mv.RAM[mv.Regs[IP]];
-    printf("\nEjecutando...");
     while (mv.Regs[IP] < TamC - 1 && inst != 0xFFFF) // Simplificar codOp no lo permite
     {
         Cod = inst & 0b00011111;
 
         OP1 = (inst >> 4) & 0x03;
         OP2 = (inst >> 6) & 0x03;
-        printf("\n%x  %x", OP2, OP1);
         // Busca Operandos
         if ((Cod == 0x03 || Cod == 0x1A) && OP2 == 0b01) // Si cod=0x03 (swap) o cod=0x1A(not) el op1 no puede ser inme
             return 1;                                    // por superposicion de bits => solo reviso op2
@@ -46,7 +44,6 @@ int Ejecuta(int TamC, MV mv, CodOpe codigosOperacion[32]) // hacerlo int para ma
         Valor2 = getOperando(mv, OP2, Iptemp);
         Iptemp = (~OP2) & 0x03;
         Valor1 = getOperando(mv, OP1, Iptemp);
-        printf("\n%s | %d  |%d", codigosOperacion[Cod], Valor1, Valor2);
 
         if (Errores(mv))
             return 1;
@@ -116,7 +113,6 @@ int main(int argc, char *argv[])
     {
         strcpy(codigosOperacion[i + 3], codigosOperacion[i]);
     }
-    printf("Iniciando...");
     for (i = 0; i < 4; i++)
     {
         mv.VecError[i].valor = 0;
@@ -135,19 +131,14 @@ int main(int argc, char *argv[])
         arch = fopen(argv[1], "rb");
         if (arch != NULL)
         {
-            printf("\nAbriendo Archivo...");
             fread(header.ident, 1, 5, arch);
-            printf("\n%s", header.ident);
             fread(&header.verc, 1, 1, arch);
-            printf("\n%x", header.verc);
             fread(&aux, 1, 2, arch);
-            printf("\nLeyendo Archivo...");
             sscanf(aux, "%x", &TamC);
             if (strcmp(header.ident, "VMX24") == 0)
                 if (header.verc == 0x01)
                 {
                     // TamC = atoi(aux);
-                    printf("\n%d", TamC);
                     if (TamC <= MaxMem)
                     {
                         mv.TDS[0].base = 0;
