@@ -13,7 +13,7 @@ struct
 } header;
 typedef char CodOpe[5];
 
-void (*funcion[32])(int *a, int *b, MV mv) = {MOV, ADD, SUB, SWAP, MUL, DIV, CMP, SHL, SHR, AND, OR, XOR, RND, VACIO, VACIO, VACIO, SYS, JMP, JZ, JP, JN, JNZ, JNP, JNN, LDL, LDH, NOT, VACIO, VACIO, VACIO, VACIO, STOP};
+void (*funcion[32])(int *a, int *b, MV *mv) = {MOV, ADD, SUB, SWAP, MUL, DIV, CMP, SHL, SHR, AND, OR, XOR, RND, VACIO, VACIO, VACIO, SYS, JMP, JZ, JP, JN, JNZ, JNP, JNN, LDL, LDH, NOT, VACIO, VACIO, VACIO, VACIO, STOP};
 
 int Errores(MV mv)
 {
@@ -52,7 +52,7 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de e
         if (Errores(*mv))
             return 1;
 
-        funcion[Cod](&Valor1, &Valor2, *mv);
+        funcion[Cod](&Valor1, &Valor2, mv);
         mv->Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
         if (Errores(*mv))
             return 1;
