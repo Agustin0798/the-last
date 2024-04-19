@@ -58,15 +58,15 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de e
             return 1;
         if ((Cod & 0b10000) == 0b00000 && Cod != 0x06) // dos operandos y distinto de cmp
         {
-            setOperando(&mv, OP1, Valor1, (~OP2) & 0x03);
+            setOperando(mv, OP1, Valor1, (~OP2) & 0x03);
             if (Cod == 0x03)
-                setOperando(mv, OP2, Valor2);
+                setOperando(mv, OP2, Valor2, 0);
             if (Errores(*mv))
                 return 1;
         }
         else if (Cod == 0x1A) // operacion not
         {
-            setOperando(mv, OP2, Valor2);
+            setOperando(mv, OP2, Valor2, 0);
             if (Errores(*mv))
                 return 1;
         }
