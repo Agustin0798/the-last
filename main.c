@@ -52,23 +52,44 @@ int Ejecuta(int TamC, MV mv, CodOpe codigosOperacion[32]) // hacerlo int para ma
             return 1;
 
         funcion[Cod](&Valor1, &Valor2, mv);
-        mv.Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
+        printf("\n%Valor1:%d  Valor2:%d", Valor1, Valor2);
+        // if (OP1 & 0x03 == 0x03)
+        // {
+        //     setOperando(mv, OP2, Valor2, Iptemp);
+        // }
+        // else
+        // {
+
+        //     if ((OP1 & 0x03) && (OP2 & 0x3 != 0x03))
+        //     {
+        //         Iptemp = (~OP2) & 0x03;
+        //         setOperando(mv, OP1, Valor1, Iptemp);
+        //     }
+        // }
+
         if (Errores(mv))
             return 1;
         if ((Cod & 0b10000) == 0b00000 && Cod != 0x06) // dos operandos y distinto de cmp
         {
-            setOperando(mv, OP1, Valor1);
+            setOperando(&mv, OP1, Valor1, (~OP2) & 0x03);
             if (Cod == 0x03)
-                setOperando(mv, OP2, Valor2);
+                setOperando(&mv, OP2, Valor2, 0);
             if (Errores(mv))
                 return 1;
         }
         else if (Cod == 0x1A) // operacion not
         {
-            setOperando(mv, OP2, Valor2);
+            setOperando(&mv, OP2, Valor2, 0);
             if (Errores(mv))
                 return 1;
         }
+        Iptemp = 0;
+        Valor2 = getOperando(mv, OP2, Iptemp);
+        Iptemp = (~OP2) & 0x03;
+        Valor1 = getOperando(mv, OP1, Iptemp);
+        printf("\n%d reg eax", mv.Regs[10]);
+        printf("\n%s | %d  |%d", codigosOperacion[Cod], Valor1, Valor2);
+        mv.Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
         inst = mv.RAM[mv.Regs[IP]];
     }
     if (mv.Regs[IP] >= TamC)
@@ -142,7 +163,8 @@ int main(int argc, char *argv[])
             printf("\n%x", header.verc);
             fread(&aux, 1, 2, arch);
             printf("\nLeyendo Archivo...");
-            sscanf(aux, "%x", &TamC);
+            TamC = (aux[0] << 8) | aux[1];
+            // sscanf(aux, "%x", &TamC);
             if (strcmp(header.ident, "VMX24") == 0)
                 if (header.verc == 0x01)
                 {

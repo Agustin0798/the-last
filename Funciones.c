@@ -22,7 +22,9 @@ void VACIO(int *a, int *b, MV mv)
 
 void MOV(int *a, int *b, MV mv)
 {
+    printf("\n operandoA:%d  operandoB:%d", *a, *b);
     *a = *b;
+    printf("\n operandoA:%d  operandoB:%d", *a, *b);
     modificaCC(a, mv);
 }
 
@@ -52,7 +54,7 @@ void DIV(int *a, int *b, MV mv)
         modificaCC(a, mv);
     }
     else
-        mv.VecError[0].valor=1; // solucion preliminar para manejo de error
+        mv.VecError[0].valor = 1; // solucion preliminar para manejo de error
 }
 
 void SWAP(int *a, int *b, MV mv) // no debe aceptar operandos inmediatos
@@ -156,12 +158,11 @@ void JNZ(int *a, int *b, MV mv)
 }
 void LDL(int *a, int *b, MV mv)
 {
-    mv.Regs[AC]=(mv.Regs[AC]|0x0000ffff)& (short int) (0x8000 | ((*b)&0xffff));
-
+    mv.Regs[AC] = (mv.Regs[AC] | 0x0000ffff) & (short int)(0x8000 | ((*b) & 0xffff));
 }
 void LDH(int *a, int *b, MV mv)
 {
-    mv.Regs[AC]= (mv.Regs[AC]&0x0000ffff)+ (( 0x8000 |((*b)&0xffff))<<16);
+    mv.Regs[AC] = (mv.Regs[AC] & 0x0000ffff) + ((0x8000 | ((*b) & 0xffff)) << 16);
 }
 
 void NOT(int *a, int *b, MV mv)
@@ -174,96 +175,103 @@ void STOP(int *a, int *b, MV mv)
 }
 void SYS(int *a, int *b, MV mv)
 {
-    unsigned int dirFis,dirLog=mv.Regs[EDX],seg,offset;
+    unsigned int dirFis, dirLog = mv.Regs[EDX], seg, offset;
     unsigned int tamCel = (mv.Regs[ECX] >> 8) & 0x000000FF;
     unsigned int cantCel = mv.Regs[ECX] & 0x000000FF;
     unsigned int modSys = mv.Regs[EAX] & 0x000000FF;
-    int i,j;
+    int i, j;
     int dato;
 
     switch (*b)
     {
-        case 1:
-                seg=dirLog >> 16;
-                offset=dirLog & 0x0000FFFF;
-                if (seg < 5) // direccion logica valida (puede acceder a un elemento de la TDS)
+    case 1:
+        seg = dirLog >> 16;
+        offset = dirLog & 0x0000FFFF;
+        if (seg < 5) // direccion logica valida (puede acceder a un elemento de la TDS)
+        {
+            dirFis = mv.TDS[seg].base + offset;
+            for (i = 0; i < cantCel; i++)
+            {
+                switch (modSys)
                 {
-                    dirFis=mv.TDS[seg].base+offset;
-                    for (i=0; i<cantCel; i++)
-                    {
-                        switch (modSys)
-                        {
-                            case 1: scanf("%d \n",&dato);
-                                break;
-                            case 2: scanf("%c \n",&dato);
-                                break;
-                            case 4: scanf("%o \n",&dato);
-                                break;
-                            case 8: scanf("%x \n",&dato);
-                                break;
-                        }
-                        if (dato < 0)
-                        {
-                            for (j=0; j<tamCel-1; j++)
-                                if ((dirFis+j >= mv.TDS[seg].base) && (dirFis+j < mv.TDS[seg].base+mv.TDS[seg].tam))
-                                    mv.RAM[dirFis+j]=0xFF;
-                                else
-                                    mv.VecError[2].valor=1; // error fallo de segmento
-                            mv.RAM[dirFis+tamCel-1]=dato;
-                        }
+                case 1:
+                    scanf("%d \n", &dato);
+                    break;
+                case 2:
+                    scanf("%c \n", &dato);
+                    break;
+                case 4:
+                    scanf("%o \n", &dato);
+                    break;
+                case 8:
+                    scanf("%x \n", &dato);
+                    break;
+                }
+                if (dato < 0)
+                {
+                    for (j = 0; j < tamCel - 1; j++)
+                        if ((dirFis + j >= mv.TDS[seg].base) && (dirFis + j < mv.TDS[seg].base + mv.TDS[seg].tam))
+                            mv.RAM[dirFis + j] = 0xFF;
                         else
-                        {
-                            for (j=0; j<tamCel-1; j++)
-                                if ((dirFis+j >= mv.TDS[seg].base) && (dirFis+j < mv.TDS[seg].base+mv.TDS[seg].tam))
-                                    mv.RAM[dirFis+j]=0x00;
-                                else
-                                    mv.VecError[2].valor=1; // error fallo de segmento
-                            mv.RAM[dirFis+tamCel-1]=dato;
-                        }
-                        dirFis+=tamCel; // me muevo para guardar el siguiente dato ingresado
-                    }
+                            mv.VecError[2].valor = 1; // error fallo de segmento
+                    mv.RAM[dirFis + tamCel - 1] = dato;
                 }
                 else
-                    mv.VecError[3].valor=1; // dir log invalida
-            break;
-        case 2:
-                seg=dirLog >> 16;
-                offset=dirLog & 0x0000FFFF;
-                dato=0;
-                if (seg < 5) // direccion logica valida (puede acceder a un elemento de la TDS)
                 {
-                    dirFis=mv.TDS[seg].base+offset;
-                    for (i=0; i<cantCel; i++)   //muestra los datos
+                    for (j = 0; j < tamCel - 1; j++)
+                        if ((dirFis + j >= mv.TDS[seg].base) && (dirFis + j < mv.TDS[seg].base + mv.TDS[seg].tam))
+                            mv.RAM[dirFis + j] = 0x00;
+                        else
+                            mv.VecError[2].valor = 1; // error fallo de segmento
+                    mv.RAM[dirFis + tamCel - 1] = dato;
+                }
+                dirFis += tamCel; // me muevo para guardar el siguiente dato ingresado
+            }
+        }
+        else
+            mv.VecError[3].valor = 1; // dir log invalida
+        break;
+    case 2:
+        seg = dirLog >> 16;
+        offset = dirLog & 0x0000FFFF;
+        dato = 0;
+        if (seg < 5) // direccion logica valida (puede acceder a un elemento de la TDS)
+        {
+            dirFis = mv.TDS[seg].base + offset;
+            for (i = 0; i < cantCel; i++) // muestra los datos
+            {
+                for (j = 0; j < tamCel; j++) // arma los datos
+                {
+                    if ((dirFis + j >= mv.TDS[seg].base) && (dirFis + j < mv.TDS[seg].base + mv.TDS[seg].tam))
                     {
-                        for (j=0; j<tamCel; j++) // arma los datos
-                        {
-                            if ((dirFis+j >= mv.TDS[seg].base) && (dirFis+j < mv.TDS[seg].base+mv.TDS[seg].tam))
-                            {
-                                dato+=mv.RAM[dirFis+j];
-                                if (j < tamCel-1)
-                                    dato=dato << 8;
-                            }
-                            else
-                            {
-                                mv.VecError[2].valor=1; // error fallo de segmento
-                            }
-                        }
-                        switch (modSys)
-                        {
-                            case 1: printf("%d \n",dato);
-                                break;
-                            case 2: printf("%c \n",dato);
-                                break;
-                            case 4: printf("%o \n",dato);
-                                break;
-                            case 8: printf("%x \n",dato);
-                                break;
-                        }
+                        dato += mv.RAM[dirFis + j];
+                        if (j < tamCel - 1)
+                            dato = dato << 8;
+                    }
+                    else
+                    {
+                        mv.VecError[2].valor = 1; // error fallo de segmento
                     }
                 }
-                else
-                    mv.VecError[3].valor=1; // dir log invalida
-            break;
-
+                switch (modSys)
+                {
+                case 1:
+                    printf("%d \n", dato);
+                    break;
+                case 2:
+                    printf("%c \n", dato);
+                    break;
+                case 4:
+                    printf("%o \n", dato);
+                    break;
+                case 8:
+                    printf("%x \n", dato);
+                    break;
+                }
+            }
+        }
+        else
+            mv.VecError[3].valor = 1; // dir log invalida
+        break;
     }
 }
