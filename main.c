@@ -44,9 +44,9 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de e
         if ((Cod == 0x03 || Cod == 0x1A) && OP2 == 0b01) // Si cod=0x03 (swap) o cod=0x1A(not) el op1 no puede ser inme
             return 1;                                    // por superposicion de bits => solo reviso op2
         Iptemp = 0;
-        Valor2 = getOperando(*mv, OP2, Iptemp);
+        Valor2 = getOperando(mv, OP2, Iptemp);
         Iptemp = (~OP2) & 0x03;
-        Valor1 = getOperando(*mv, OP1, Iptemp);
+        Valor1 = getOperando(mv, OP1, Iptemp);
         printf("\n%s | %d  |%d", codigosOperacion[Cod], Valor1, Valor2);
 
         if (Errores(*mv))

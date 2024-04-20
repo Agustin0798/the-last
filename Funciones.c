@@ -181,34 +181,75 @@ void SYS(int *a, int *b, MV *mv)
     unsigned int cantCel = mv->Regs[ECX] & 0x000000FF;
     unsigned int modSys = mv->Regs[EAX] & 0x000000FF;
     int i, j, numero;
-    char *leo;
+    int dato;
 
     switch (*b)
     {
-    case 1: // read
-        seg = dirLog >> 16;
-        offset = dirLog & 0x0000FFFF;
-        if (seg < 5) // puedo referirme a algun elemento de la TDS
-        {
-            dirFis = mv->TDS[seg].base + offset;
-            i = 0;
-            while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
+        case 1: // read
+            seg = dirLog >> 16;
+            offset = dirLog & 0x0000FFFF;
+            if (seg < 5) // puedo referirme a algun elemento de la TDS
             {
-                scanf("%s \n", leo);
-                switch (modSys)
-                {
-                case 1:
-                    numero = atoi(leo);
-                    break;
-                case 4:
-                    numero = atoi(leo);
-                    break;
-                case 8:
-                    numero = atoi(leo);
-                    break;
-                }
+                dirFis = mv->TDS[seg].base + offset;
+                i = 0;
+                if (dirFis > mv->TDS[seg].base)
+                    while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
+                    {
+                        switch (modSys)
+                        {
+                            case 1: scanf(" %d",&dato);
+                                break;
+                            case 2: scanf(" %c",&dato);
+                                break;
+                            case 4: scanf(" %o",&dato);
+                                break;
+                            case 8: scanf(" %x",&dato);
+                        }
+                        if ((dirFis + tamCel)< (mv->TDS[seg].base + mv->TDS[seg].tam))
+                            for (j=tamCel-1; j>-1; j--)
+                                mv->RAM[dirFis]=(dato >> (8*j));
+                        dirFis+=tamCel;
+                        i++;
+                    }
+                if (i < cantCel)
+                    mv->VecError[2].valor=1;
             }
-        }
-        break;
+            break;
+        case 2:
+            seg = dirLog >> 16;
+            offset = dirLog & 0x0000FFFF;
+            if (seg < 5)
+            {
+                dirFis=mv->TDS[seg].base + offset;
+                i=0;
+                if (dirFis > mv->TDS[seg].base)
+                    while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
+                    {
+                        dato=0;
+                        if ((dirFis + tamCel)< (mv->TDS[seg].base + mv->TDS[seg].tam))
+                        {
+                            for (j=0; j<tamCel; j++)
+                            {
+                                dato<<=(8*j);
+                                dato|=mv->RAM[dirFis];
+                                dirFis++;
+                            }
+                            switch (modSys)
+                            {
+                                case 1: printf(" %d",&dato);
+                                    break;
+                                case 2: printf(" %c",&dato);
+                                    break;
+                                case 4: printf(" %o",&dato);
+                                    break;
+                                case 8: printf(" %x",&dato);
+                            }
+                        }
+                        i++;
+                    }
+                if (i < cantCel)
+                    mv->VecError[2].valor=1;
+            }
+            break;
     }
 }
