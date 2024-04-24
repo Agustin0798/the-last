@@ -30,51 +30,55 @@ int Errores(MV mv)
 int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de errores
 {
     char Cod, OP1, OP2, inst = 0;
-    int Valor1, Valor2, Iptemp;
+    int Valor1, Valor2, Iptemp, ipAct;
 
     inst = mv->RAM[mv->Regs[IP]];
-    printf("\nEjecutando...");
-    while ((mv->Regs[IP] < (mv->TDS[CS].base + mv->TDS[CS].tam)) && inst != 0xFFFF) // Simplificar codOp no lo permite
+    // printf("\nEjecutando...");
+    while ((mv->Regs[IP] < (mv->TDS[CS].base + mv->TDS[CS].tam)) && strcmp(codigosOperacion[inst & 0b00011111], "STOP")) // Simplificar codOp no lo permite
     {
         Cod = inst & 0b00011111;
         OP1 = (inst >> 4) & 0x03;
         OP2 = (inst >> 6) & 0x03;
-        printf("\n %x %x  %x", Cod, OP2, OP1);
+        // printf("\n %x %x  %x", Cod, OP2, OP1);
         // Busca Operandos
         if ((Cod == 0x03 || Cod == 0x1A) && OP2 == 0b01) // Si cod=0x03 (swap) o cod=0x1A(not) el op1 no puede ser inme
             return 1;                                    // por superposicion de bits => solo reviso op2
         Iptemp = 0;
-        Valor2 = getOperando(mv, OP2, Iptemp);
+        Valor2 = getOperando(mv, OP2, mv->Regs[IP], Iptemp);
         Iptemp = (~OP2) & 0x03;
-        Valor1 = getOperando(mv, OP1, Iptemp);
-        printf("\n%s | %d  |%d", codigosOperacion[Cod], Valor1, Valor2);
+        Valor1 = getOperando(mv, OP1, mv->Regs[IP], Iptemp);
+        printf("\n%s | %d |%d\n", codigosOperacion[Cod], Valor1, Valor2);
 
         if (Errores(*mv))
             return 1;
-
-        funcion[Cod](&Valor1, &Valor2, mv);
+        ipAct = mv->Regs[IP];
         mv->Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
+        funcion[Cod](&Valor1, &Valor2, mv);
         if (Errores(*mv))
-            return 1;
-        if ((Cod & 0b10000) == 0b00000 && Cod != 0x06) // dos operandos y distinto de cmp
         {
-            setOperando(mv, OP1, Valor1, (~OP2) & 0x03);
+            return 1;
+        }
+        if ((Cod & 0b10000) == 0b00000 && Cod != 0x06 && (Cod != 0x10)) // dos operandos y distinto de cmp
+        {
+            setOperando(mv, OP1, Valor1, ipAct, (~OP2) & 0x03);
             if (Cod == 0x03)
-                setOperando(mv, OP2, Valor2, 0);
+                setOperando(mv, OP2, Valor2, ipAct, 0);
             if (Errores(*mv))
                 return 1;
         }
         else if (Cod == 0x1A) // operacion not
         {
-            setOperando(mv, OP2, Valor2, 0);
+            setOperando(mv, OP2, Valor2, ipAct, 0);
             if (Errores(*mv))
                 return 1;
         }
         inst = mv->RAM[mv->Regs[IP]];
     }
-    if (mv->Regs[IP] >= mv->TDS[CS].tam)
+    if (mv->Regs[IP] > mv->TDS[CS].tam)
     {
-        mv->VecError[2].valor = 1; // error fallo de segmento
+
+        mv->VecError[2].valor = 1;
+        // error fallo de segmento
         return 1;
     }
     else
@@ -232,7 +236,7 @@ int main(int argc, char *argv[])
     {
         strcpy(codigosOperacion[i + 3], codigosOperacion[i]);
     }
-    printf("Iniciando...");
+    // printf("Iniciando...");
     for (i = 0; i < 4; i++)
     {
         mv.VecError[i].valor = 0;
@@ -254,20 +258,19 @@ int main(int argc, char *argv[])
         printf("No hay archivo");
     if (arch != NULL)
     {
-        printf("\nAbriendo Archivo...");
+        // printf("\nAbriendo Archivo...");
         fread(header.ident, 1, 5, arch);
-        printf("\n%s", header.ident);
+        // printf("\n%s", header.ident);
         fread(&header.verc, 1, 1, arch);
-        printf("\n%x", header.verc);
+        // printf("\n%x", header.verc);
         fread(aux, 1, 2, arch);
-        printf("\n%x %x aux", aux[0], aux[1]);
-        printf("\nLeyendo Archivo...");
+        // printf("\nLeyendo Archivo...");
         TamC = (aux[0] << 8) | aux[1];
         if (strcmp(header.ident, "VMX24") == 0)
             if (header.verc == 0x01)
             {
                 // TamC = atoi(aux);
-                printf("\n%d tamC", TamC);
+                // printf("\n%d tamC", TamC);
                 if (TamC <= MaxMem)
                 {
                     mv.TDS[0].base = 0;
@@ -282,7 +285,10 @@ int main(int argc, char *argv[])
                     }
                     Ejecuta(&mv, codigosOperacion);
                     for (i = 0; i < 4; i++)
-                        mv.VecError[i].valor == 0 ? printf("") : printf("%s \n", mv.VecError[i].descripcion);
+                        if (mv.VecError[i].valor == 0)
+                            printf("");
+                        else
+                            printf(" \n%s", mv.VecError[i].descripcion);
                     i = 0;
                     bandera = 0;
                     while (i < argc && bandera != 1)
@@ -297,7 +303,7 @@ int main(int argc, char *argv[])
                     printf("\nNo hay memoria suficiente para almacenar el codigo. ");
             }
             else
-                printf("\nVercion no valida. ");
+                printf("\nVersion no valida. ");
         else
             printf("\nIdentificador invalido.");
         return 0;

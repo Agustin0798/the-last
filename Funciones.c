@@ -8,11 +8,11 @@
 void modificaCC(int *a, MV *mv)
 {
     if ((*a) < 0)
-        mv->Regs[IP] = 0x80000000 + (mv->Regs[IP] & 0x3FFFFFFF);
+        mv->Regs[CC] = 0x80000000 + (mv->Regs[CC] & 0x3FFFFFFF);
     else if (*a == 0)
-        mv->Regs[IP] = 0x40000000 + (mv->Regs[IP] & 0x3FFFFFFF);
+        mv->Regs[CC] = 0x40000000 + (mv->Regs[CC] & 0x3FFFFFFF);
     else
-        mv->Regs[IP] = 0x00000000 + (mv->Regs[IP] & 0x3FFFFFFF);
+        mv->Regs[CC] = 0x00000000 + (mv->Regs[CC] & 0x3FFFFFFF);
 }
 
 void VACIO(int *a, int *b, MV *mv)
@@ -22,15 +22,15 @@ void VACIO(int *a, int *b, MV *mv)
 
 void MOV(int *a, int *b, MV *mv)
 {
-    printf("\n operandoA:%d  operandoB:%d", *a, *b);
     *a = *b;
-    printf("\n operandoA:%d  operandoB:%d", *a, *b);
     modificaCC(a, mv);
 }
 
 void ADD(int *a, int *b, MV *mv)
 {
+
     *a += *b;
+    // printf("\n%x %x", *a, *b);
     modificaCC(a, mv);
 }
 
@@ -181,75 +181,123 @@ void SYS(int *a, int *b, MV *mv)
     unsigned int cantCel = mv->Regs[ECX] & 0x000000FF;
     unsigned int modSys = mv->Regs[EAX] & 0x000000FF;
     int i, j, numero;
+    char aux;
     int dato;
 
     switch (*b)
     {
-        case 1: // read
-            seg = dirLog >> 16;
-            offset = dirLog & 0x0000FFFF;
-            if (seg < 5) // puedo referirme a algun elemento de la TDS
-            {
-                dirFis = mv->TDS[seg].base + offset;
-                i = 0;
-                if (dirFis > mv->TDS[seg].base)
-                    while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
+    case 1: // read
+        seg = dirLog >> 16;
+        offset = dirLog & 0x0000FFFF;
+        if (seg < 5) // puedo referirme a algun elemento de la TDS
+        {
+            dirFis = mv->TDS[seg].base + offset;
+            i = 0;
+            if (dirFis >= mv->TDS[seg].base)
+
+                while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
+                {
+                    switch (modSys)
                     {
+                    case 1:
+                        scanf(" %d", &dato);
+                        break;
+                    case 2:
+                        scanf(" %c", &dato);
+                        break;
+                    case 4:
+                        scanf(" %o", &dato);
+                        break;
+                    case 8:
+                        scanf(" %x", &dato);
+                    }
+                    if ((dirFis + tamCel) < (mv->TDS[seg].base + mv->TDS[seg].tam))
+                    {
+                        for (j = tamCel - 1; j >= 0; j--)
+                        {
+                            mv->RAM[dirFis] = (dato >> (8 * j));
+                            dirFis++;
+                        }
+                    }
+                    i++;
+                }
+            if (i < cantCel)
+                mv->VecError[2].valor = 1;
+        }
+        break;
+    case 2:
+        seg = dirLog >> 16;
+        offset = dirLog & 0x0000FFFF;
+        if (seg < 5)
+        {
+            dirFis = mv->TDS[seg].base + offset;
+            // printf("\n%d Direccion Fisica SYS", dirFis);
+            i = 0;
+            if (dirFis >= mv->TDS[seg].base) // ACA esta el error
+            {
+
+                while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
+                {
+                    dato = 0;
+                    if ((dirFis + tamCel) < (mv->TDS[seg].base + mv->TDS[seg].tam))
+                    {
+                        if (tamCel == 4)
+                        {
+                            dato = (dato & 0x00FFFFFF) | (mv->RAM[dirFis] << 24);
+                            dato = (dato & 0xFF00FFFF) | (mv->RAM[dirFis + 1] << 16);
+                            dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis + 2] << 8);
+                            dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis + 3];
+                        }
+                        else if (tamCel == 3)
+                        {
+                            dato = (dato & 0xFF00FFFF) | (mv->RAM[dirFis] << 16);
+                            dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis + 1] << 8);
+                            dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis + 2];
+                        }
+                        else if (tamCel == 2)
+                        {
+                            dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis] << 8);
+                            dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis + 1];
+                        }
+                        else
+                            dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis];
+
+                        // for (j = tamCel - 1; j >= 1; j--)
+                        // {
+
+                        //     // aux = mv->RAM[dirFis];
+                        //     // aux= (aux << i * 8);
+                        //     // dato |= aux;
+                        //     printf("EL VALOR de aux em sys ES %x\n", dato);
+                        //     dirFis++;
+                        // }
+                        // dato <<= 8;
+                        // aux = mv->RAM[dirFis];
+                        // printf("EL VALOR de aux em sys ES %x    %x\n", aux & 0xff, (dato & 0xffffff00));
+                        // dato = (dato & 0xffffff00) | (aux & 0xff);
                         switch (modSys)
                         {
-                            case 1: scanf(" %d",&dato);
-                                break;
-                            case 2: scanf(" %c",&dato);
-                                break;
-                            case 4: scanf(" %o",&dato);
-                                break;
-                            case 8: scanf(" %x",&dato);
+                        case 1:
+                            printf("%d\n", dato);
+                            break;
+                        case 2:
+                            printf("%c\n", dato);
+                            break;
+                        case 4:
+                            printf("%o\n", dato);
+                            break;
+                        case 8:
+                            printf("%x\n", dato);
                         }
-                        if ((dirFis + tamCel)< (mv->TDS[seg].base + mv->TDS[seg].tam))
-                            for (j=tamCel-1; j>-1; j--)
-                                mv->RAM[dirFis]=(dato >> (8*j));
-                        dirFis+=tamCel;
-                        i++;
                     }
-                if (i < cantCel)
-                    mv->VecError[2].valor=1;
+                    i++;
+                }
             }
-            break;
-        case 2:
-            seg = dirLog >> 16;
-            offset = dirLog & 0x0000FFFF;
-            if (seg < 5)
+            if (i < cantCel)
             {
-                dirFis=mv->TDS[seg].base + offset;
-                i=0;
-                if (dirFis > mv->TDS[seg].base)
-                    while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
-                    {
-                        dato=0;
-                        if ((dirFis + tamCel)< (mv->TDS[seg].base + mv->TDS[seg].tam))
-                        {
-                            for (j=0; j<tamCel; j++)
-                            {
-                                dato<<=(8*j);
-                                dato|=mv->RAM[dirFis];
-                                dirFis++;
-                            }
-                            switch (modSys)
-                            {
-                                case 1: printf(" %d",&dato);
-                                    break;
-                                case 2: printf(" %c",&dato);
-                                    break;
-                                case 4: printf(" %o",&dato);
-                                    break;
-                                case 8: printf(" %x",&dato);
-                            }
-                        }
-                        i++;
-                    }
-                if (i < cantCel)
-                    mv->VecError[2].valor=1;
+                mv->VecError[2].valor = 1;
             }
-            break;
+        }
+        break;
     }
 }

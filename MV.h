@@ -26,9 +26,9 @@ typedef struct
 
 typedef struct MV
 {
-    char RAM[MaxMem];
+    unsigned char RAM[MaxMem];
     int Regs[16];
     Segmentos TDS[5];
-    TError VecError[4];  //0_inst invalida 1_div por 0  2_fallo de segmento  3_dir log invalida
+    TError VecError[4]; // 0_inst invalida 1_div por 0  2_fallo de segmento  3_dir log invalida
 } MV;
 #endif
