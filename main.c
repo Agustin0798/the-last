@@ -46,11 +46,14 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de e
         Iptemp = 0;
         Valor2 = getOperando(mv, OP2, mv->Regs[IP], Iptemp);
         Iptemp = (~OP2) & 0x03;
+
         Valor1 = getOperando(mv, OP1, mv->Regs[IP], Iptemp);
-        printf("\n%s | %d |%d\n", codigosOperacion[Cod], Valor1, Valor2);
+        // printf("\n%s | %d |%d\n", codigosOperacion[Cod], Valor1, Valor2);
 
         if (Errores(*mv))
+        {
             return 1;
+        }
         ipAct = mv->Regs[IP];
         mv->Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
         funcion[Cod](&Valor1, &Valor2, mv);
@@ -253,7 +256,14 @@ int main(int argc, char *argv[])
         i++;
     }
     if (encontrado != NULL)
+    {
+
         arch = fopen(argv[i - 1], "rb");
+        if (!arch)
+        {
+            printf("Archivo invalido");
+        }
+    }
     else
         printf("No hay archivo");
     if (arch != NULL)

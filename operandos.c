@@ -35,7 +35,7 @@ int leerMemoria(MV *mv, int value) // Si
 
   char s;
   s = mv->Regs[codReg] >> 16;
-  int direccionFisica = mv->TDS[s].base + mv->Regs[codReg] & 0x0000ffff + offset;
+  int direccionFisica = mv->TDS[s].base + (mv->Regs[codReg] & 0x0000ffff) + offset;
   for (i = 3; i >= 0; i--)
   {
     if (mv->TDS[s].base <= direccionFisica && direccionFisica < mv->TDS[s].base + mv->TDS[s].tam)
@@ -69,7 +69,7 @@ void escribeMemoria(MV *mv, int valor, int parametro)
   {
     s = ((*mv).Regs[codReg] >> 16) & 0x0000ffff;
   }
-  direccionFisica = (*mv).TDS[s].base + (*mv).Regs[codReg] & 0x0000ffff + offset;
+  direccionFisica = (*mv).TDS[s].base + ((*mv).Regs[codReg] & 0x0000ffff) + offset;
   if (((*mv).TDS[s].base <= direccionFisica) && (direccionFisica + 4 < (*mv).TDS[s].base + (*mv).TDS[s].tam))
   {
 
@@ -144,6 +144,7 @@ void setOperando(MV *mv, char op, int dato, int ipAct, int ipTemp)
   {
   case 0:
     escribeMemoria(mv, dato, parametro);
+
     break;
 
   case 2:
