@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 #include "Funciones.h"
 #include "MV.h"
 
@@ -247,6 +248,11 @@ void SYS(int *a, int *b, MV *mv)
                             dato = (dato & 0xFF00FFFF) | (mv->RAM[dirFis + 1] << 16);
                             dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis + 2] << 8);
                             dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis + 3];
+                            printf("\n%d %x ", dato);
+                            printf("%2x\n", (mv->RAM[dirFis] << 24));
+                            printf("%2x\n", (mv->RAM[dirFis + 1] << 16));
+                            printf("%2x\n", (mv->RAM[dirFis + 2] << 8));
+                            printf("%2x\n", (mv->RAM[dirFis + 3]));
                         }
                         else if (tamCel == 3)
                         {
@@ -261,36 +267,28 @@ void SYS(int *a, int *b, MV *mv)
                         }
                         else
                             dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis];
-
-                        // for (j = tamCel - 1; j >= 1; j--)
-                        // {
-
-                        //     // aux = mv->RAM[dirFis];
-                        //     // aux= (aux << i * 8);
-                        //     // dato |= aux;
-                        //     printf("EL VALOR de aux em sys ES %x\n", dato);
-                        //     dirFis++;
-                        // }
-                        // dato <<= 8;
-                        // aux = mv->RAM[dirFis];
-                        // printf("EL VALOR de aux em sys ES %x    %x\n", aux & 0xff, (dato & 0xffffff00));
-                        // dato = (dato & 0xffffff00) | (aux & 0xff);
-                        switch (modSys)
-                        {
-                        case 1:
-                            printf("%d\n", dato);
-                            break;
-                        case 2:
-                            printf("%c\n", dato);
-                            break;
-                        case 4:
-                            printf("%o\n", dato);
-                            break;
-                        case 8:
-                            printf("%x\n", dato);
-                        }
                     }
+
+                    printf("\nMEmoria: %x", mv->RAM[dirFis]);
                     i++;
+                }
+                switch (modSys)
+                {
+                case 1:
+                    printf("%x\n", dato);
+                    break;
+                case 2:
+                    if (isprint(dato))
+                        printf("'%c\n", dato);
+
+                    else
+                        printf(".\n");
+                    break;
+                case 4:
+                    printf("%o\n", dato);
+                    break;
+                case 8:
+                    printf("%x\n", dato);
                 }
             }
             if (i < cantCel)

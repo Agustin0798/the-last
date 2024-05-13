@@ -164,6 +164,7 @@ int getOperando(MV *mv, char op, int ipAct, int ipTemp)
     break;
 
   case 1:
+
     value = parametro;
     break;
 

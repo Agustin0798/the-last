@@ -113,15 +113,16 @@ void muestMem(char muest[], char *NomReg[][4])
 
 void muestInme(char muest[])
 {
-    short int num = (muest[0] << 8) | muest[1];
+    int num = (muest[0] << 8) | muest[1];
 
     printf("%d", num);
 }
 
 void Disassembler(MV mv, CodOpe codigosOperacion[])
 {
-    int IPaux= mv.TDS[CS].base, i, j;
-    char inst, OP1, OP2, Cod, muestra1[3], muestra2[3];
+    int IPaux = mv.TDS[CS].base, i, j;
+    unsigned char inst, OP1, OP2, Cod;
+    char muestra1[3], muestra2[3];
     char *NomReg[16][4] = {
         {"CS", "", "", ""},
         {"DS", "", "", ""},
@@ -143,68 +144,77 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
 
     while (IPaux < (mv.TDS[CS].base + mv.TDS[CS].tam))
     {
-        inst= mv.RAM[IPaux];
-        Cod= inst & 0b00011111;
-        OP1= (inst >> 4) & 0x03;
-        OP2= (inst >> 6) & 0x03;
+        inst = mv.RAM[IPaux];
+        Cod = inst & 0b00011111;
+        OP1 = (inst >> 4) & 0x03;
+        OP2 = (inst >> 6) & 0x03;
 
-        printf("[%04X] %02X ",IPaux,inst); //muestro pos de memoria e instruccion
+        printf("[%04X] %02X ", IPaux, (unsigned)inst); // muestro pos de memoria e instruccion
 
-        for (i=0; i< ((~OP2) & 0x03); i++) //muestro info op2
+        for (i = 0; i < ((~OP2) & 0x03); i++) // muestro info op2
         {
-            printf("%02X ",mv.RAM[IPaux+1+i]);
-            muestra2[i]=mv.RAM[IPaux+1+i];
+            printf("%02X ", mv.RAM[IPaux + 1 + i]);
+            muestra2[i] = mv.RAM[IPaux + 1 + i];
         }
 
-        j=0;
-        for (i=((~OP2) & 0x03); i< (((~OP1) & 0x03) + ((~OP2) & 0x03)); i++) //muestro info op1 arranca mostrando en la pos marcada por inst+1+tamOP2
+        j = 0;
+        for (i = ((~OP2) & 0x03); i < (((~OP1) & 0x03) + ((~OP2) & 0x03)); i++) // muestro info op1 arranca mostrando en la pos marcada por inst+1+tamOP2
         {
-            printf("%02X ",mv.RAM[IPaux+1+i]);
-            muestra1[j]=mv.RAM[IPaux+1+i];
+            printf("%02X ", mv.RAM[IPaux + 1 + i]);
+            muestra1[j] = mv.RAM[IPaux + 1 + i];
             j++;
         }
 
-        for (i=(((~OP1) & 0x03) + ((~OP2) & 0x03)); i< 6; i++) // completo los espacios
-            printf(" ");
-        printf("| %s ",codigosOperacion[Cod]); //muestro mnemonico
+        for (i = (((~OP1) & 0x03) + ((~OP2) & 0x03)); i < 6; i++) // completo los espacios
+            printf("   ");
+        printf("| %s ", codigosOperacion[Cod]); // muestro mnemonico
 
-        if (OP1 != 3)  //hay op1
+        if (OP1 != 3) // hay op1
         {
-            switch (OP1) //muestro op1
+            switch (OP1) // muestro op1
             {
-                case 0: muestMem(muestra1,NomReg);
-                    break;
-                case 1: muestInme(muestra1);
-                    break;
-                case 2: muestRegi(muestra1,NomReg);
-                    break;
+            case 0:
+                muestMem(muestra1, NomReg);
+                break;
+            case 1:
+                muestInme(muestra1);
+                break;
+            case 2:
+                muestRegi(muestra1, NomReg);
+                break;
             }
-            if (OP2 != 3) //hay op2
+            if (OP2 != 3) // hay op2
             {
                 printf(",");
-                switch (OP2) //muestro op2
+                switch (OP2) // muestro op2
                 {
-                    case 0: muestMem(muestra2,NomReg);
-                        break;
-                    case 1: muestInme(muestra2);
-                        break;
-                    case 2: muestRegi(muestra2,NomReg);
-                        break;
+                case 0:
+                    muestMem(muestra2, NomReg);
+                    break;
+                case 1:
+                    muestInme(muestra2);
+                    break;
+                case 2:
+                    muestRegi(muestra2, NomReg);
+                    break;
                 }
             }
         }
-        else //no hay op1
-            switch (OP2) //muestro op2 (si no hay no hace nada)
+        else             // no hay op1
+            switch (OP2) // muestro op2 (si no hay no hace nada)
             {
-                case 0: muestMem(muestra2,NomReg);
-                    break;
-                case 1: muestInme(muestra2);
-                    break;
-                case 2: muestRegi(muestra2,NomReg);
-                    break;
+            case 0:
+                muestMem(muestra2, NomReg);
+                break;
+            case 1:
+                muestInme(muestra2);
+                break;
+            case 2:
+                muestRegi(muestra2, NomReg);
+                break;
             }
         printf("\n");
-        IPaux+= 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // paso a la proxima instruccion
+        IPaux += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // paso a la proxima instruccion
     }
 }
 
