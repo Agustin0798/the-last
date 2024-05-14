@@ -30,18 +30,36 @@ void SHR(int *a, int *b, MV *mv);
 void RND(int *a, int *b, MV *mv);
 
 void JMP(int *a, int *b, MV *mv);
+
 void JZ(int *a, int *b, MV *mv);
+
 void SYS(int *a, int *b, MV *mv);
+
 void JP(int *a, int *b, MV *mv);
+
 void JN(int *a, int *b, MV *mv);
+
 void JNZ(int *a, int *b, MV *mv);
+
 void JNP(int *a, int *b, MV *mv);
+
 void JNN(int *a, int *b, MV *mv);
+
 void LDL(int *a, int *b, MV *mv);
+
 void LDH(int *a, int *b, MV *mv);
+
 void NOT(int *a, int *b, MV *mv);
+
 void STOP(int *a, int *b, MV *mv);
 
+void POP(int *a, int *b, MV *mv);
+
+void PUSH(int *a, int *b, MV *mv);
+
+void CALL(int *a, int *b,  MV *mv);
+
+void RET(int *a, int *b, MV *mv);
 // jumps
 // ldh carga parate alta de acc
 // ldl carga parte baja

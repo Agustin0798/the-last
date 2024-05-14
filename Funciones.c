@@ -108,13 +108,13 @@ void RND(int *a, int *b, MV *mv)
 }
 void JMP(int *a, int *b, MV *mv)
 {
-    mv->Regs[IP] = *b;
+    mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | ((*b) & 0x0000FFFF);
 }
 void JZ(int *a, int *b, MV *mv)
 {
     if ((mv->Regs[CC] & 0x40000000) == 0x40000000)
     {
-        mv->Regs[IP] = *b;
+        mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | ((*b) & 0x0000FFFF);
     }
 }
 
@@ -122,7 +122,7 @@ void JNN(int *a, int *b, MV *mv)
 {
     if ((mv->Regs[CC] & 0x80000000) != 0X80000000)
     {
-        mv->Regs[IP] = *b;
+        mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | ((*b) & 0x0000FFFF);
     }
 }
 
@@ -130,14 +130,14 @@ void JNP(int *a, int *b, MV *mv)
 {
     if ((mv->Regs[CC] & 0xc0000000) != 0)
     {
-        mv->Regs[IP] = *b;
+        mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | ((*b) & 0x0000FFFF);
     }
 }
 void JP(int *a, int *b, MV *mv)
 {
     if ((mv->Regs[CC] & 0xc0000000) == 0)
     {
-        mv->Regs[IP] = *b;
+        mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | ((*b) & 0x0000FFFF);
     }
 }
 void JN(int *a, int *b, MV *mv)
@@ -145,7 +145,7 @@ void JN(int *a, int *b, MV *mv)
 
     if ((mv->Regs[CC] & 0x80000000) != 0)
     {
-        mv->Regs[IP] = *b;
+        mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | ((*b) & 0x0000FFFF);
     }
 }
 
@@ -154,7 +154,7 @@ void JNZ(int *a, int *b, MV *mv)
 
     if ((mv->Regs[CC] & 0x40000000) != 0)
     {
-        mv->Regs[IP] = *b;
+         mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | ((*b) & 0x0000FFFF);
     }
 }
 void LDL(int *a, int *b, MV *mv)
@@ -173,6 +173,62 @@ void NOT(int *a, int *b, MV *mv)
 
 void STOP(int *a, int *b, MV *mv)
 {
+}
+
+void PUSH(int *a, int *b, MV *mv)
+{
+    int dirFis,dirLog,seg,offset;
+
+    dirLog = mv->Regs[SP]-=4;
+    seg = (dirLog >> 16) & 0x0000FFFF;
+    offset = dirLog & 0x0000FFFF;
+    dirFis = mv->TDS[seg].base + offset;
+    if (dirFis < mv->TDS[seg].base)
+        mv->VecError[5].valor=1; // se produjo stack overflow
+    else
+    {
+        mv->RAM[dirFis]=((*b) >> 24) & 0x000000FF;
+        mv->RAM[dirFis+1]=((*b) >> 16) & 0x000000FF;
+        mv->RAM[dirFis+2]=((*b) >> 8) & 0x000000FF;
+        mv->RAM[dirFis+3]=(*b) & 0x000000FF;
+    }
+}
+
+void POP(int *a, int *b, MV *mv)
+{
+    int dirFis,dirLog,seg,offset,dato;
+
+    dirLog = mv->Regs[SP]+=4;
+    seg = (dirLog >> 16) & 0x0000FFFF;
+    offset = dirLog & 0x0000FFFF;
+    dirFis = mv->TDS[seg].base + offset;
+    if (dirFis >= (mv->TDS[seg].base + mv->TDS[seg].tam))
+        mv->VecError[6].valor=1; //se produjo stack underflow;
+    else
+    {
+        dato=0;
+        dato=(dato & 0x00FFFFFF) | (mv->RAM[dirFis-4] << 24);
+        dato=(dato & 0xFF00FFFF) | (mv->RAM[dirFis-3] << 16);
+        dato=(dato & 0xFFFF00FF) | (mv->RAM[dirFis-2] << 8);
+        dato=(dato & 0xFFFFFF00) | (mv->RAM[dirFis-1]);
+        (*b)=dato;
+    }
+}
+
+void CALL(int *a, int *b, MV *mv)
+{
+    int ip=mv->Regs[IP];
+
+    PUSH(a,&ip,mv);
+    JMP(a,b,mv);
+}
+
+void RET(int *a, int *b, MV *mv)
+{
+    int auxIP;
+
+    POP(a,&auxIP,mv);
+    mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | (auxIP & 0x0000FFFF);
 }
 
 void SYS(int *a, int *b, MV *mv)
@@ -248,11 +304,6 @@ void SYS(int *a, int *b, MV *mv)
                             dato = (dato & 0xFF00FFFF) | (mv->RAM[dirFis + 1] << 16);
                             dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis + 2] << 8);
                             dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis + 3];
-                            printf("\n%d %x ", dato);
-                            printf("%2x\n", (mv->RAM[dirFis] << 24));
-                            printf("%2x\n", (mv->RAM[dirFis + 1] << 16));
-                            printf("%2x\n", (mv->RAM[dirFis + 2] << 8));
-                            printf("%2x\n", (mv->RAM[dirFis + 3]));
                         }
                         else if (tamCel == 3)
                         {
@@ -267,28 +318,36 @@ void SYS(int *a, int *b, MV *mv)
                         }
                         else
                             dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis];
+
+                        // for (j = tamCel - 1; j >= 1; j--)
+                        // {
+
+                        //     // aux = mv->RAM[dirFis];
+                        //     // aux= (aux << i * 8);
+                        //     // dato |= aux;
+                        //     printf("EL VALOR de aux em sys ES %x\n", dato);
+                        //     dirFis++;
+                        // }
+                        // dato <<= 8;
+                        // aux = mv->RAM[dirFis];
+                        // printf("EL VALOR de aux em sys ES %x    %x\n", aux & 0xff, (dato & 0xffffff00));
+                        // dato = (dato & 0xffffff00) | (aux & 0xff);
+                        switch (modSys)
+                        {
+                        case 1:
+                            printf("%d\n", dato);
+                            break;
+                        case 2:
+                            printf("%c\n", dato);
+                            break;
+                        case 4:
+                            printf("%o\n", dato);
+                            break;
+                        case 8:
+                            printf("%x\n", dato);
+                        }
                     }
-
-                    printf("\nMEmoria: %x", mv->RAM[dirFis]);
                     i++;
-                }
-                switch (modSys)
-                {
-                case 1:
-                    printf("%x\n", dato);
-                    break;
-                case 2:
-                    if (isprint(dato))
-                        printf("'%c\n", dato);
-
-                    else
-                        printf(".\n");
-                    break;
-                case 4:
-                    printf("%o\n", dato);
-                    break;
-                case 8:
-                    printf("%x\n", dato);
                 }
             }
             if (i < cantCel)

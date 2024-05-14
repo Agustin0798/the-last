@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
         strcpy(codigosOperacion[i + 3], codigosOperacion[i]);
     }
     // printf("Iniciando...");
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 7; i++)
     {
         mv.VecError[i].valor = 0;
     }
@@ -241,6 +241,9 @@ int main(int argc, char *argv[])
     mv.VecError[1].descripcion = "Divicion por cero";
     mv.VecError[2].descripcion = "Fallo de segmento";
     mv.VecError[3].descripcion = "Direccion logica invalida";
+    mv.VecError[4].descripcion = "Memoria Insuficiente";
+    mv.VecError[5].descripcion = "Stack Overflow";
+    mv.VecError[6].descripcion = "Stack Underflow";
 
     i = 0;
     while (i < argc && encontrado == NULL)
