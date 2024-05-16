@@ -288,6 +288,7 @@ int main(int argc, char *argv[])
                     for (i = 0; i < TamC; i++)
                     {
                         fread(&mv.RAM[i], 1, 1, arch);
+                        printf("\n%x", mv.RAM[i]);
                     }
                     Ejecuta(&mv, codigosOperacion);
                     for (i = 0; i < 4; i++)

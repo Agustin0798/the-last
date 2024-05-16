@@ -7,15 +7,18 @@ int leerParametro(MV *mv, char op, int ipAct, int ipTemp) // Op ya esta negado(t
 {
   int i, paramValue = 0;
   char aux;
-
+  printf("\nEntro a Leer\n");
   for (i = 1; i <= op; i++)
   {
     if (mv->TDS[mv->Regs[CS]].tam > ipAct + ipTemp + i)
     {
 
-      aux = mv->RAM[(ipAct & 0x0000ffff) + ipTemp + i];
-      paramValue = (paramValue << 8) + aux; // byte a byte
+      aux = (unsigned)mv->RAM[(ipAct & 0x0000ffff) + ipTemp + i];
+      printf("\n AUX: %x  Parametro:%x ", aux, paramValue);
+      paramValue = ((paramValue << 8) | (aux & 0xff)); // byte a byte
       // mv.Regs[5] += i; //Uso ip sin actualizarlo
+      /*00 00 00 00*/
+      printf("\n AUX: %x  Parametro:%x ", aux, paramValue);
     }
     else
     {
@@ -164,8 +167,8 @@ int getOperando(MV *mv, char op, int ipAct, int ipTemp)
     break;
 
   case 1:
-
-    value = parametro;
+    value = (short int)(parametro);
+    printf("\nValue: %x\n", value);
     break;
 
   case 2:
