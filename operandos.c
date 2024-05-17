@@ -7,19 +7,17 @@ int leerParametro(MV *mv, char op, int ipAct, int ipTemp) // Op ya esta negado(t
 {
   int i, paramValue = 0;
   char aux;
-  printf("\nEntro a Leer\n");
   for (i = 1; i <= op; i++)
   {
     if (mv->TDS[mv->Regs[CS]].tam > ipAct + ipTemp + i)
     {
 
       aux = (unsigned)mv->RAM[(ipAct & 0x0000ffff) + ipTemp + i];
-      printf("\n AUX: %x  Parametro:%x ", aux, paramValue);
+      
       paramValue = ((paramValue << 8) | (aux & 0xff)); // byte a byte
       // mv.Regs[5] += i; //Uso ip sin actualizarlo
       /*00 00 00 00*/
-      printf("\n AUX: %x  Parametro:%x ", aux, paramValue);
-    }
+      }
     else
     {
 
@@ -59,11 +57,12 @@ int leerMemoria(MV *mv, int value) // Si
 }
 void escribeMemoria(MV *mv, int valor, int parametro)
 {
-  char s, codReg = (parametro >> 16) & 0x0f;
+  char s, codReg = (parametro >> 16) & 0x0f,tamEscritura=(~(parametro>>22)&0x3)+1;
   int i;
-  char offset = parametro & 0x00ffff;
+  char offset =0;
+  offset=( parametro & 0x0000ffff);
+  printf("\n%d\n",tamEscritura);
   int direccionFisica;
-  char test;
   if (codReg == 0)
   {
     s = DS;
@@ -73,14 +72,15 @@ void escribeMemoria(MV *mv, int valor, int parametro)
     s = ((*mv).Regs[codReg] >> 16) & 0x0000ffff;
   }
   direccionFisica = (*mv).TDS[s].base + ((*mv).Regs[codReg] & 0x0000ffff) + offset;
-  if (((*mv).TDS[s].base <= direccionFisica) && (direccionFisica + 4 < (*mv).TDS[s].base + (*mv).TDS[s].tam))
+  if (((*mv).TDS[s].base <= direccionFisica) && ((direccionFisica +tamEscritura) < (*mv).TDS[s].base + (*mv).TDS[s].tam))
   {
 
-    for (i = 3; i >= 0; i--)
+    for (i = tamEscritura-1; i >= 0; i--)
     {
       mv->RAM[direccionFisica] = 0;
 
       mv->RAM[direccionFisica] |= (unsigned char)(((valor >> (8 * i)) & 0xFF));
+      printf("\n%d %d \n",i,(unsigned char)(((valor >> (8 * i)) & 0xFF)));
       direccionFisica++;
     }
   }
@@ -167,8 +167,8 @@ int getOperando(MV *mv, char op, int ipAct, int ipTemp)
     break;
 
   case 1:
-    value = (short int)(parametro);
-    printf("\nValue: %x\n", value);
+    value =(parametro);
+    //printf("\nValue: %x\n", value);
     break;
 
   case 2:

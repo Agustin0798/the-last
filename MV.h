@@ -31,6 +31,7 @@ typedef struct
 
 typedef struct MV
 {
+    char enter;
     unsigned char RAM[MaxMem];
     int Regs[16];
     Segmentos TDS[5];

@@ -288,7 +288,7 @@ void SYS(int *a, int *b, MV *mv)
         if (seg < 5)
         {
             dirFis = mv->TDS[seg].base + offset;
-            // printf("\n%d Direccion Fisica SYS", dirFis);
+            printf("\n%d tAMANO\n", tamCel);
             i = 0;
             if (dirFis >= mv->TDS[seg].base) // ACA esta el error
             {
@@ -355,6 +355,12 @@ void SYS(int *a, int *b, MV *mv)
                 mv->VecError[2].valor = 1;
             }
         }
+        break;
+        case 'F':
+            
+        break;
+
+        case 4:
         break;
     }
 }

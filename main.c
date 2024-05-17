@@ -76,6 +76,11 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de e
                 return 1;
         }
         inst = mv->RAM[mv->Regs[IP]];
+        if (mv->enter == 1)
+        {
+            mv->enter=0;
+            funcion[0x10](0,'F',mv);
+        }
     }
     if (mv->Regs[IP] > mv->TDS[CS].tam)
     {
@@ -98,8 +103,14 @@ void muestRegi(char muest[], char *NomReg[][4])
 void muestMem(char muest[], char *NomReg[][4])
 {
     char reg = muest[0] & 0x0F;
+    char tam= (muest[0]>>6) & 0x3;
     short int offset = (muest[1] << 8) | muest[2];
-
+    if(tam == 0x3)
+        printf("b");
+    else if (tam == 0x1)
+            printf("w");
+        else
+            printf("l");
     printf("[%s", NomReg[reg][0]);
     if (offset != 0)
     {
@@ -113,7 +124,7 @@ void muestMem(char muest[], char *NomReg[][4])
 
 void muestInme(char muest[])
 {
-    int num = (muest[0] << 8) | muest[1];
+    int num = ((muest[0] << 8) |( muest[1] &0xff));
 
     printf("%d", num);
 }
@@ -288,7 +299,7 @@ int main(int argc, char *argv[])
                     for (i = 0; i < TamC; i++)
                     {
                         fread(&mv.RAM[i], 1, 1, arch);
-                        printf("\n%x", mv.RAM[i]);
+                        //printf("\n%x", mv.RAM[i]);
                     }
                     Ejecuta(&mv, codigosOperacion);
                     for (i = 0; i < 4; i++)
