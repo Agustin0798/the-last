@@ -6,11 +6,7 @@
 #include "MV.h"
 #include "operandos.h"
 
-struct
-{
-    char ident[6];
-    char verc;
-} header;
+
 typedef char CodOpe[5];
 
 void (*funcion[32])(int *a, int *b, MV *mv) = {MOV, ADD, SUB, SWAP, MUL, DIV, CMP, SHL, SHR, AND, OR, XOR, RND, VACIO, VACIO, VACIO, SYS, JMP, JZ, JP, JN, JNZ, JNP, JNN, LDL, LDH, NOT, VACIO, VACIO, VACIO, VACIO, STOP};
@@ -276,15 +272,15 @@ int main(int argc, char *argv[])
     if (arch != NULL)
     {
         // printf("\nAbriendo Archivo...");
-        fread(header.ident, 1, 5, arch);
+        fread(mv.header.ident, 1, 5, arch);
         // printf("\n%s", header.ident);
-        fread(&header.verc, 1, 1, arch);
+        fread(&mv.header.verc, 1, 1, arch);
         // printf("\n%x", header.verc);
         fread(aux, 1, 2, arch);
         // printf("\nLeyendo Archivo...");
         TamC = (aux[0] << 8) | aux[1];
-        if (strcmp(header.ident, "VMX24") == 0)
-            if (header.verc == 0x01)
+        if (strcmp(mv.header.ident, "VMX24") == 0)
+            if (mv.header.verc == 0x01)
             {
                 // TamC = atoi(aux);
                 // printf("\n%d tamC", TamC);

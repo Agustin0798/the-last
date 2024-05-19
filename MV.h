@@ -31,7 +31,14 @@ typedef struct
 
 typedef struct MV
 {
+    struct
+    {
+        char ident[6];
+        char verc;
+    } header;
+    short int tamMem;
     char enter;
+    char *imagen;
     unsigned char RAM[MaxMem];
     int Regs[16];
     Segmentos TDS[5];

@@ -238,8 +238,9 @@ void SYS(int *a, int *b, MV *mv)
     unsigned int cantCel = mv->Regs[ECX] & 0x000000FF;
     unsigned int modSys = mv->Regs[EAX] & 0x000000FF;
     int i, j, numero;
-    char aux;
+    char aux,Op;
     int dato;
+    FILE *archIMG;
 
     switch (*b)
     {
@@ -356,8 +357,37 @@ void SYS(int *a, int *b, MV *mv)
             }
         }
         break;
-        case 'F':
-            
+    case 'F':
+            if (mv->enter == 1)
+            {
+                archIMG=fopen(mv->imagen,"Wb");
+                if (archIMG != NULL)
+                {
+                    fwrite(mv->header.ident,5,1,archIMG);
+                    fwrite(mv->header.verc,1,1,archIMG);
+                    fwrite(mv->tamMem,2,1,archIMG);
+                    for (i=0; i<16; i++)
+                        fwrite(mv->Regs[i],4,1,archIMG);
+                    for (i=0; i<5; i++)
+                    {
+                        fwrite(mv->TDS[i].base,2,1,archIMG);
+                        fwrite(mv->TDS[i].tam,2,1,archIMG);
+                    }
+                    for (i=0; i<mv->tamMem; i++)
+                        fwrite(mv->RAM[i],1,1,archIMG);
+                    switch (getchar())
+                    {
+                    case '\n':mv->enter=1;
+                        break;
+                    case 'q':
+                    case 'Q': mv->Regs[IP]=(mv->Regs[IP] & 0xFFFF0000) | mv->tamMem;
+                        break;
+                    case 'g':
+                    case 'G':
+                        break;
+                    }
+                }
+            }
         break;
 
         case 4:
