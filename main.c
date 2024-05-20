@@ -6,7 +6,6 @@
 #include "MV.h"
 #include "operandos.h"
 
-
 typedef char CodOpe[5];
 
 void (*funcion[32])(int *a, int *b, MV *mv) = {MOV, ADD, SUB, SWAP, MUL, DIV, CMP, SHL, SHR, AND, OR, XOR, RND, VACIO, VACIO, VACIO, SYS, JMP, JZ, JP, JN, JNZ, JNP, JNN, LDL, LDH, NOT, VACIO, VACIO, VACIO, VACIO, STOP};
@@ -74,8 +73,8 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de e
         inst = mv->RAM[mv->Regs[IP]];
         if (mv->enter == 1)
         {
-            mv->enter=0;
-            funcion[0x10](0,'F',mv);
+            mv->enter = 0;
+            funcion[0x10](0, 'F', mv);
         }
     }
     if (mv->Regs[IP] > mv->TDS[CS].tam)
@@ -99,14 +98,14 @@ void muestRegi(char muest[], char *NomReg[][4])
 void muestMem(char muest[], char *NomReg[][4])
 {
     char reg = muest[0] & 0x0F;
-    char tam= (muest[0]>>6) & 0x3;
+    char tam = (muest[0] >> 6) & 0x3;
     short int offset = (muest[1] << 8) | muest[2];
-    if(tam == 0x3)
+    if (tam == 0x3)
         printf("b");
     else if (tam == 0x1)
-            printf("w");
-        else
-            printf("l");
+        printf("w");
+    else
+        printf("l");
     printf("[%s", NomReg[reg][0]);
     if (offset != 0)
     {
@@ -120,7 +119,7 @@ void muestMem(char muest[], char *NomReg[][4])
 
 void muestInme(char muest[])
 {
-    int num = ((muest[0] << 8) |( muest[1] &0xff));
+    int num = ((muest[0] << 8) | (muest[1] & 0xff));
 
     printf("%d", num);
 }
@@ -233,7 +232,7 @@ int main(int argc, char *argv[])
     int TamC, i, bandera;
     FILE *arch = NULL;
     MV mv;
-    char *encontrado = NULL;
+    char *encontradoVMX = NULL, *encontradoVMI = NULL;
     strcpy(codigosOperacion[31], codigosOperacion[24]);
     for (i = 23; i >= 13; i--)
     {
@@ -253,12 +252,13 @@ int main(int argc, char *argv[])
     mv.VecError[6].descripcion = "Stack Underflow";
 
     i = 0;
-    while (i < argc && encontrado == NULL)
+    while (i < argc && encontradoVMX == NULL)
     {
-        encontrado = strstr(argv[i], ".vmx");
+        encontradoVMX = strstr(argv[i], ".vmx");
+        encontradoVMI = strstr(argv[i], ".vmi");
         i++;
     }
-    if (encontrado != NULL)
+    if (encontradoVMX != NULL)
     {
 
         arch = fopen(argv[i - 1], "rb");
@@ -274,13 +274,13 @@ int main(int argc, char *argv[])
         // printf("\nAbriendo Archivo...");
         fread(mv.header.ident, 1, 5, arch);
         // printf("\n%s", header.ident);
-        fread(&mv.header.verc, 1, 1, arch);
+        fread(&mv.header.v, 1, 1, arch);
         // printf("\n%x", header.verc);
         fread(aux, 1, 2, arch);
         // printf("\nLeyendo Archivo...");
         TamC = (aux[0] << 8) | aux[1];
         if (strcmp(mv.header.ident, "VMX24") == 0)
-            if (mv.header.verc == 0x01)
+            if (mv.header.v == 0x01 || 0x02)
             {
                 // TamC = atoi(aux);
                 // printf("\n%d tamC", TamC);
@@ -288,14 +288,23 @@ int main(int argc, char *argv[])
                 {
                     mv.TDS[0].base = 0;
                     mv.TDS[0].tam = TamC;
-                    mv.TDS[1].base = TamC;
-                    mv.TDS[1].tam = MaxMem - TamC;
-                    mv.Regs[CS] = mv.Regs[IP] = 0;
-                    mv.Regs[DS] = 0x00010000;
+                    if (mv.header.v == 0x01)
+                    {
+
+                        mv.TDS[1].base = TamC;
+                        mv.TDS[1].tam = MaxMem - TamC;
+                        mv.Regs[CS] = mv.Regs[IP] = 0;
+                        mv.Regs[DS] = 0x00010000;
+                    }
+                    else
+                    {
+                        fread(&mv.TDS)
+                            mv.TDS[];
+                    }
                     for (i = 0; i < TamC; i++)
                     {
                         fread(&mv.RAM[i], 1, 1, arch);
-                        //printf("\n%x", mv.RAM[i]);
+                        // printf("\n%x", mv.RAM[i]);
                     }
                     Ejecuta(&mv, codigosOperacion);
                     for (i = 0; i < 4; i++)

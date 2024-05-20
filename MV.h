@@ -34,7 +34,9 @@ typedef struct MV
     struct
     {
         char ident[6];
-        char verc;
+        char v;
+        short int sizeCS, sizeDS, sizeES, sizeSS, sizeKS, offsetEP;
+
     } header;
     short int tamMem;
     char enter;
