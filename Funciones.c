@@ -239,6 +239,7 @@ void SYS(int *a, int *b, MV *mv)
     unsigned int modSys = mv->Regs[EAX] & 0x000000FF;
     int i, j, numero;
     char aux,Op;
+    char *string;
     int dato;
     FILE *archIMG;
 
@@ -319,20 +320,6 @@ void SYS(int *a, int *b, MV *mv)
                         }
                         else
                             dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis];
-
-                        // for (j = tamCel - 1; j >= 1; j--)
-                        // {
-
-                        //     // aux = mv->RAM[dirFis];
-                        //     // aux= (aux << i * 8);
-                        //     // dato |= aux;
-                        //     printf("EL VALOR de aux em sys ES %x\n", dato);
-                        //     dirFis++;
-                        // }
-                        // dato <<= 8;
-                        // aux = mv->RAM[dirFis];
-                        // printf("EL VALOR de aux em sys ES %x    %x\n", aux & 0xff, (dato & 0xffffff00));
-                        // dato = (dato & 0xffffff00) | (aux & 0xff);
                         switch (modSys)
                         {
                         case 1:
@@ -363,8 +350,8 @@ void SYS(int *a, int *b, MV *mv)
                 archIMG=fopen(mv->imagen,"Wb");
                 if (archIMG != NULL)
                 {
-                    fwrite(mv->header.ident,5,1,archIMG);
-                    fwrite(mv->header.verc,1,1,archIMG);
+                    fwrite("VMX24",5,1,archIMG);
+                    fwrite('1',1,1,archIMG);
                     fwrite(mv->tamMem,2,1,archIMG);
                     for (i=0; i<16; i++)
                         fwrite(mv->Regs[i],4,1,archIMG);
@@ -389,8 +376,18 @@ void SYS(int *a, int *b, MV *mv)
                 }
             }
         break;
-
-        case 4:
+    case 3:
+            seg= dirLog >> 16;
+            offset= dirLog & 0x0000FFFF;
+            if (seg < 5)
+            {
+                dirFis= mv->TDS[seg].base + offset;
+                i=0;
+                //string
+                //while (i )
+            }
+        break;
+    case 4:
         break;
     }
 }
