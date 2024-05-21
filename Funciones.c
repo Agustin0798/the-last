@@ -350,7 +350,7 @@ void SYS(int *a, int *b, MV *mv)
             archIMG = fopen(mv->imagen, "Wb");
             if (archIMG != NULL)
             {
-                fwrite("VMX24", 5, 1, archIMG);
+                fwrite("VMI24", 5, 1, archIMG);
                 fwrite("1", 1, 1, archIMG);
                 fwrite(&(mv->tamMem), 2, 1, archIMG);
                 for (i = 0; i < 16; i++)
@@ -362,6 +362,7 @@ void SYS(int *a, int *b, MV *mv)
                 }
                 for (i = 0; i < mv->tamMem; i++)
                     fwrite(&(mv->RAM[i]), 1, 1, archIMG);
+                fclose(archIMG);
                 switch (getchar())
                 {
                 case '\n':
@@ -384,7 +385,7 @@ void SYS(int *a, int *b, MV *mv)
         if (seg < 5)
         {
             dirFis = mv->TDS[seg].base + offset;
-            if ((dirFis + cantCel + 1) < (mv->TDS[seg].base + mv->TDS[seg].tam))
+            if ((dirFis >= mv->TDS[seg].base) && ((dirFis + cantCel) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
             {
                 gets(string);
                 i = 0;
@@ -405,14 +406,20 @@ void SYS(int *a, int *b, MV *mv)
             dirFis = mv->TDS[seg].base + offset;
             i = 0;
             aux = mv->RAM[dirFis];
-            while (aux != '\0')
+            if ((dirFis >= mv->TDS[seg].base))
+                while (aux != '\0' && ((dirFis + i) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
+                {
+                    string[i] = aux;
+                    i++;
+                    aux = mv->RAM[dirFis + i];
+                }
+            if (aux == '\0')
             {
                 string[i] = aux;
-                i++;
-                aux = mv->RAM[dirFis + i];
+                puts(string);
             }
-            string[i] = aux;
-            puts(string);
+            else
+                mv->VecError[2].valor = 1;
         }
         break;
     }

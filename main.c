@@ -130,12 +130,12 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
     char *NomReg[16][4] = {
         {"CS", "", "", ""},
         {"DS", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
+        {"ES", "", "", ""},
+        {"SS", "", "", ""},
+        {"KS", "", "", ""},
         {"IP", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
+        {"SP", "", "", ""},
+        {"BP", "", "", ""},
         {"CC", "", "", ""},
         {"AC", "", "", ""},
         {"EAX", "AL", "AH", "AX"},
@@ -222,19 +222,37 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
     }
 }
 
+void iniciaEjecucion(int argc, char *argv[], MV mv, CodOpe codigosOperacion[32])
+{
+    int i, bandera;
+    Ejecuta(&mv, codigosOperacion);
+    for (i = 0; i < 4; i++)
+        if (mv.VecError[i].valor == 1)
+            printf("\n%s\n", mv.VecError[i].descripcion);
+    i = 0;
+    bandera = 0;
+    while (i < argc && bandera != 1)
+        if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "-D") == 0)
+            bandera = 1;
+        else
+            i++;
+    if (bandera == 1)
+        Disassembler(mv, codigosOperacion);
+}
+
 int main(int argc, char *argv[])
 {
     CodOpe codigosOperacion[32] =
         {"MOV", "ADD", "SUB", "SWAP", "MUL", "DIV", "CMP", "SHL", "SHR", "AND", "OR", "XOR", "RND", "", "", "", "SYS", "JMP", "JZ", "JP", "JN", "JNZ", "JNP", "JNN", "LDL", "LDH", "NOT", "PUSH", "POP", "CALL", "RET", "STOP"};
     char aux[3];
-    int TamC, i, bandera;
+    int TamC, i, bandera, ultimoIndice, seg;
     FILE *arch = NULL;
     MV mv;
     char *encontradoVMX = NULL, *encontradoVMI = NULL;
     strcpy(codigosOperacion[31], codigosOperacion[24]);
-    for (i = 23; i >= 13; i--)
+    for (i = 0; i <= 4; i++)
     {
-        strcpy(codigosOperacion[i + 3], codigosOperacion[i]);
+        mv.Regs[i] = -1 << 16;
     }
     for (i = 0; i < 7; i++)
     {
@@ -249,31 +267,47 @@ int main(int argc, char *argv[])
     mv.VecError[6].descripcion = "Stack Underflow";
 
     i = 0;
-    while (i < argc && encontradoVMX == NULL)
+    mv.tamMem = MaxMem;
+    mv.imagen = NULL;
+    while (i < argc)
     {
         encontradoVMX = strstr(argv[i], ".vmx");
         encontradoVMI = strstr(argv[i], ".vmi");
+        if (strstr(argv[i], "m="))
+        {
+            argv[i][0] = 0;
+            argv[i][1] = 0;
+            mv.tamMem = atoi(argv[i]);
+            printf("\n%d\n", mv.tamMem);
+        }
+        if (encontradoVMX != NULL)
+        {
+            arch = fopen(argv[i], "rb");
+            if (!arch)
+            {
+                printf("Archivo invalido");
+            }
+        }
+        if (encontradoVMI != NULL)
+        {
+            strcpy(mv.imagen, argv[i]);
+        }
         i++;
     }
-    if (encontradoVMX != NULL)
-    {
 
-        arch = fopen(argv[i - 1], "rb");
-        if (!arch)
-        {
-            printf("Archivo invalido");
-        }
-    }
-    else
-        printf("No hay archivo");
     if (arch != NULL)
     {
+        for (i = 0; i <= 4; i++)
+        {
+            mv.header.tamanios[i] = 0;
+        }
         fread(mv.header.ident, 1, 5, arch);
         fread(&mv.header.v, 1, 1, arch);
         fread(aux, 1, 2, arch);
         TamC = (aux[0] << 8) | aux[1];
+        mv.header.tamanios[CS] = TamC;
         if (strcmp(mv.header.ident, "VMX24") == 0)
-            if (mv.header.v == 0x01 || 0x02)
+            if (mv.header.v == 0x01 || mv.header.v == 0x02)
             {
                 mv.TDS[0].base = 0;
                 mv.TDS[0].tam = TamC;
@@ -281,38 +315,75 @@ int main(int argc, char *argv[])
                 {
 
                     mv.TDS[1].base = TamC;
-                    mv.TDS[1].tam = TamC;
+                    mv.header.tamanios[DS] = mv.TDS[1].tam = mv.tamMem - TamC;
+
                     mv.Regs[CS] = mv.Regs[IP] = 0;
                     mv.Regs[DS] = 0x00010000;
                 }
-                else
+                else // v2
                 {
-                    for (i = 2; i <= 4; i++)
+                    for (i = 0; i <= 4; i++)
                     {
 
-                        mv.TDS[i].base = (mv.TDS[i - 1].tam + mv.TDS[i - 1].base);
-                        fread(&mv.TDS[2].tam, 1, 2, arch);
+                        fread(mv.header.tamanios[i], 1, 2, arch);
                     }
+
+                    fread(&(mv.header.offsetEP), 1, 2, arch);
+                    if (mv.header.tamanios[KS] != 0)
+                    {
+                        mv.Regs[KS] = 0;
+                        mv.TDS[0].base = 0;
+                        mv.TDS[0].tam = mv.header.tamanios[KS];
+                        ultimoIndice = 0;
+                    }
+                    else
+                    {
+                        ultimoIndice = -1;
+                    }
+                    for (i = 0; i <= 3; i++)
+                    {
+                        if (mv.header.tamanios[i] != 0)
+                        {
+                            if (ultimoIndice = -1)
+                            {
+
+                                mv.TDS[++ultimoIndice].base = 0;
+                            }
+                            else
+                            {
+
+                                mv.TDS[++ultimoIndice].base = mv.TDS[ultimoIndice - 1].base + mv.TDS[ultimoIndice - 1].tam;
+                            }
+                            mv.TDS[ultimoIndice].tam = mv.header.tamanios[i];
+                            mv.Regs[i] = ultimoIndice << 16;
+                            // mv.Regs[i]<<=16;
+                        }
+                    }
+                    i = (mv.Regs[SS] & 0xFFFF0000);
+                    mv.Regs[SP] = i | (mv.TDS[i >> 16].base + mv.TDS[i >> 16].tam);
+                    mv.Regs[IP] = mv.Regs[CS] + mv.header.offsetEP;
                 }
-                for (i = 0; i < TamC; i++)
+                if ((mv.TDS[ultimoIndice].base + mv.TDS[ultimoIndice].tam) <= mv.tamMem)
                 {
-                    fread(&mv.RAM[i], 1, 1, arch);
+                    seg = mv.Regs[CS] >> 16;
+                    for (i = mv.TDS[seg].base; i < (mv.TDS[seg].base + mv.TDS[seg].tam); i++)
+                    {
+                        fread(&mv.RAM[i], 1, 1, arch);
+                    }
+                    if (mv.Regs[KS] != -1)
+                    {
+                        seg = mv.Regs[KS] >> 16;
+                        for (i = mv.TDS[seg].base; i < (mv.TDS[seg].base + mv.TDS[seg].tam); i++)
+                        {
+                            fread(&mv.RAM[i], 1, 1, arch);
+                        }
+                    }
+                    iniciaEjecucion(argc, argv, mv, codigosOperacion);
                 }
-                Ejecuta(&mv, codigosOperacion);
-                for (i = 0; i < 4; i++)
-                    if (mv.VecError[i].valor == 0)
-                        printf("");
-                    else
-                        printf(" \n%s", mv.VecError[i].descripcion);
-                i = 0;
-                bandera = 0;
-                while (i < argc && bandera != 1)
-                    if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "-D") == 0)
-                        bandera = 1;
-                    else
-                        i++;
-                if (bandera == 1)
-                    Disassembler(mv, codigosOperacion);
+                else
+                {
+                    puts(mv.VecError[4].descripcion);
+                }
             }
             else
                 printf("\nVersion no valida. ");
@@ -320,4 +391,37 @@ int main(int argc, char *argv[])
             printf("\nIdentificador invalido.");
         return 0;
     }
+    else
+    {
+        if (mv.imagen != NULL)
+        {
+            arch = fopen(mv.imagen, "rb");
+            if (arch != NULL)
+            {
+                fread(mv.header.ident, 1, 5, arch);
+                fread(&mv.header.v, 1, 1, arch);
+                fread(aux, 1, 2, arch);
+                mv.tamMem = (aux[0] << 8) | aux[1];
+                if (strcmp(mv.header.ident, "VMI24") == 0)
+                    if (mv.header.v == 0x01)
+                    {
+                        for (i = 0; i <= 15; i++)
+                        {
+                            fread(&mv.Regs[i], 1, 4, arch);
+                        }
+                        for (i = 0; i <= 4; i++)
+                        {
+                            fread(&mv.TDS[i].base, 1, 2, arch);
+                            fread(&mv.TDS[i].tam, 1, 2, arch);
+                        }
+                        for (i = 0; i < mv.tamMem; i++)
+                        {
+                            fread(&mv.RAM[i], 1, 1, arch);
+                        }
+                        iniciaEjecucion(argc, argv, mv, codigosOperacion);
+                    }
+            }
+        }
+    }
+    fclose(arch);
 }
