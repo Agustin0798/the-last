@@ -60,10 +60,5 @@ void PUSH(int *a, int *b, MV *mv);
 void CALL(int *a, int *b,  MV *mv);
 
 void RET(int *a, int *b, MV *mv);
-// jumps
-// ldh carga parate alta de acc
-// ldl carga parte baja
-// NOT
-// STOP (agus)
-// Funcion cambia
+
 #endif

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int leerParametro(MV *mv, char op, int ipAct, int ipTemp) // Op ya esta negado(tamano)
+int leerParametro(MV *mv, char op, int ipAct, int ipTemp) 
 {
   int i, paramValue = 0;
   char aux;
@@ -14,24 +14,22 @@ int leerParametro(MV *mv, char op, int ipAct, int ipTemp) // Op ya esta negado(t
 
       aux = (unsigned)mv->RAM[(ipAct & 0x0000ffff) + ipTemp + i];
       
-      paramValue = ((paramValue << 8) | (aux & 0xff)); // byte a byte
-      // mv.Regs[5] += i; //Uso ip sin actualizarlo
-      /*00 00 00 00*/
-      }
+      paramValue = ((paramValue << 8) | (aux & 0xff)); 
+    }
     else
     {
 
-      mv->VecError[2].valor = 1; // Segmentation fault
+      mv->VecError[2].valor = 1; 
     }
   }
-  // printf("\n%x AUX", paramValue);
+ 
   return paramValue;
 }
-int leerMemoria(MV *mv, int value) // Si
+int leerMemoria(MV *mv, int value) 
 {
   char tamLectura = value >> 20;
   char codReg = (value >> 16) & 0x0f;
-  char offset = value & 0x00ffff; // Tal vez sea innecesario por truncamiento
+  char offset = value & 0x00ffff; 
   int i, aux, dato = 0;
 
   char s;
@@ -49,10 +47,10 @@ int leerMemoria(MV *mv, int value) // Si
     {
       mv->VecError[2]
           .valor = 1;
-      return -1; // CAmbiar Vector de errores; // Segmentation fault
+      return -1; 
     }
   }
-  // printf("\n%d   %x", dato);
+  
   return dato;
 }
 void escribeMemoria(MV *mv, int valor, int parametro)
@@ -90,7 +88,7 @@ void escribeMemoria(MV *mv, int valor, int parametro)
   }
 }
 int inmediato(MV mv, int value)
-{ // El value es directamente el valor del operando
+{ 
   return value;
 }
 
@@ -122,13 +120,13 @@ void escribeRegistro(MV *mv, int valor, int parametro)
     (*mv).Regs[parametro & 0x0f] = valor;
     break;
   case 1:
-    // printf("\nEscribe cl %x", (*mv).Regs[parametro & 0x0f]);
+    
     (*mv).Regs[parametro & 0x0f] = ((*mv).Regs[parametro & 0x0f] & 0xffffff00) | (valor & 0x000000ff);
-    // printf("\nEscribe cl %x Despues", (*mv).Regs[parametro & 0x0f]);
+    
     break;
   case 2:
 
-    // printf("\nEscribe ch %x", (*mv).Regs[parametro & 0x0f]);
+   
     (*mv).Regs[parametro & 0x0f] = ((*mv).Regs[parametro & 0x0f] & 0xffff00ff) | ((valor & 0x000000ff) << 8);
 
     break;
@@ -156,7 +154,7 @@ void setOperando(MV *mv, char op, int dato, int ipAct, int ipTemp)
   }
 }
 int getOperando(MV *mv, char op, int ipAct, int ipTemp)
-{ // EJ op=0010 el valor llega con el desplazamiento. cambiar para segundo parametro
+{ 
 
   int parametro, value = 0;
   parametro = leerParametro(mv, (~op) & 0x03, mv->Regs[IP], ipTemp);
@@ -168,7 +166,7 @@ int getOperando(MV *mv, char op, int ipAct, int ipTemp)
 
   case 1:
     value =(parametro);
-    //printf("\nValue: %x\n", value);
+   
     break;
 
   case 2:
