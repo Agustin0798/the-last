@@ -31,7 +31,7 @@ void ADD(int *a, int *b, MV *mv)
 {
 
     *a += *b;
-    // printf("\n%x %x", *a, *b);
+    
     modificaCC(a, mv);
 }
 
@@ -55,10 +55,10 @@ void DIV(int *a, int *b, MV *mv)
         modificaCC(a, mv);
     }
     else
-        mv->VecError[0].valor = 1; // solucion preliminar para manejo de error
+        mv->VecError[0].valor = 1; 
 }
 
-void SWAP(int *a, int *b, MV *mv) // no debe aceptar operandos inmediatos
+void SWAP(int *a, int *b, MV *mv) 
 {
     int aux;
 
@@ -184,7 +184,7 @@ void PUSH(int *a, int *b, MV *mv)
     offset = dirLog & 0x0000FFFF;
     dirFis = mv->TDS[seg].base + offset;
     if (dirFis < mv->TDS[seg].base)
-        mv->VecError[5].valor=1; // se produjo stack overflow
+        mv->VecError[5].valor=1; 
     else
     {
         mv->RAM[dirFis]=((*b) >> 24) & 0x000000FF;
@@ -203,7 +203,7 @@ void POP(int *a, int *b, MV *mv)
     offset = dirLog & 0x0000FFFF;
     dirFis = mv->TDS[seg].base + offset;
     if (dirFis >= (mv->TDS[seg].base + mv->TDS[seg].tam))
-        mv->VecError[6].valor=1; //se produjo stack underflow;
+        mv->VecError[6].valor=1; 
     else
     {
         dato=0;
@@ -245,10 +245,10 @@ void SYS(int *a, int *b, MV *mv)
 
     switch (*b)
     {
-    case 1: // read
+    case 1: 
         seg = dirLog >> 16;
         offset = dirLog & 0x0000FFFF;
-        if (seg < 5) // puedo referirme a algun elemento de la TDS
+        if (seg < 5) 
         {
             dirFis = mv->TDS[seg].base + offset;
             i = 0;
@@ -292,7 +292,7 @@ void SYS(int *a, int *b, MV *mv)
             dirFis = mv->TDS[seg].base + offset;
             printf("\n%d tAMANO\n", tamCel);
             i = 0;
-            if (dirFis >= mv->TDS[seg].base) // ACA esta el error
+            if (dirFis >= mv->TDS[seg].base) 
             {
 
                 while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
@@ -382,12 +382,36 @@ void SYS(int *a, int *b, MV *mv)
             if (seg < 5)
             {
                 dirFis= mv->TDS[seg].base + offset;
-                i=0;
-                //string
-                //while (i )
+                if ((dirFis + cantCel +1) < (mv->TDS[seg].base + mv->TDS[seg].tam))
+                {
+                    gets(string);
+                    i=0;
+                    while ((i < (cantCel)) && (string[i] != '\0'))
+                    {
+                        mv->RAM[dirFis+i]=string[i]; 
+                        i++;
+                    }
+                    mv->RAM[dirFis+i]='\0';
+                }
             }
         break;
     case 4:
+            seg= dirLog >> 16;
+            offset= dirLog & 0x0000FFFF;
+            if (seg < 5)
+            {
+                dirFis= mv->TDS[seg].base + offset;
+                i=0;
+                aux=mv->RAM[dirFis];
+                while (aux != '\0')
+                {
+                    string[i]=aux;
+                    i++;
+                    aux=mv->RAM[dirFis+i];
+                }
+                string[i]=aux;
+                puts(string);
+            }
         break;
     }
 }

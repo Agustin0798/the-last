@@ -44,6 +44,6 @@ typedef struct MV
     unsigned char RAM[MaxMem];
     int Regs[16];
     Segmentos TDS[5];
-    TError VecError[7]; // 0_inst invalida 1_div por 0  2_fallo de segmento  3_dir log invalida  4_memoria insuficiente 5_stack overflow 6_stack underflow
+    TError VecError[7]; 
 } MV;
 #endif

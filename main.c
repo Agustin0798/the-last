@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +7,7 @@
 
 typedef char CodOpe[5];
 
-void (*funcion[32])(int *a, int *b, MV *mv) = {MOV, ADD, SUB, SWAP, MUL, DIV, CMP, SHL, SHR, AND, OR, XOR, RND, VACIO, VACIO, VACIO, SYS, JMP, JZ, JP, JN, JNZ, JNP, JNN, LDL, LDH, NOT, VACIO, VACIO, VACIO, VACIO, STOP};
+void (*funcion[32])(int *a, int *b, MV *mv) = {MOV, ADD, SUB, SWAP, MUL, DIV, CMP, SHL, SHR, AND, OR, XOR, RND, VACIO, VACIO, VACIO, SYS, JMP, JZ, JP, JN, JNZ, JNP, JNN, LDL, LDH, NOT, PUSH, POP, CALL, RET, STOP};
 
 int Errores(MV mv)
 {
@@ -22,41 +21,39 @@ int Errores(MV mv)
     return e;
 }
 
-int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de errores
+int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) 
 {
     char Cod, OP1, OP2, inst = 0;
     int Valor1, Valor2, Iptemp, ipAct;
 
     inst = mv->RAM[mv->Regs[IP]];
-    // printf("\nEjecutando...");
-    while ((mv->Regs[IP] < (mv->TDS[CS].base + mv->TDS[CS].tam)) && strcmp(codigosOperacion[inst & 0b00011111], "STOP")) // Simplificar codOp no lo permite
+
+    while ((mv->Regs[IP] < (mv->TDS[CS].base + mv->TDS[CS].tam)) && strcmp(codigosOperacion[inst & 0b00011111], "STOP")) 
     {
         Cod = inst & 0b00011111;
         OP1 = (inst >> 4) & 0x03;
         OP2 = (inst >> 6) & 0x03;
-        // printf("\n %x %x  %x", Cod, OP2, OP1);
-        // Busca Operandos
-        if ((Cod == 0x03 || Cod == 0x1A) && OP2 == 0b01) // Si cod=0x03 (swap) o cod=0x1A(not) el op1 no puede ser inme
-            return 1;                                    // por superposicion de bits => solo reviso op2
+
+        if ((Cod == 0x03 || Cod == 0x1A) && OP2 == 0b01) 
+            return 1;                                   
         Iptemp = 0;
         Valor2 = getOperando(mv, OP2, mv->Regs[IP], Iptemp);
         Iptemp = (~OP2) & 0x03;
 
         Valor1 = getOperando(mv, OP1, mv->Regs[IP], Iptemp);
-        // printf("\n%s | %d |%d\n", codigosOperacion[Cod], Valor1, Valor2);
 
         if (Errores(*mv))
         {
             return 1;
         }
         ipAct = mv->Regs[IP];
-        mv->Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // Incrementar IP  mascaras en los op para quedarme con los ultimos dos bits
+        mv->Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); 
         funcion[Cod](&Valor1, &Valor2, mv);
         if (Errores(*mv))
         {
             return 1;
         }
-        if ((Cod & 0b10000) == 0b00000 && Cod != 0x06 && (Cod != 0x10)) // dos operandos y distinto de cmp
+        if ((Cod & 0b10000) == 0b00000 && Cod != 0x06 && (Cod != 0x10)) 
         {
             setOperando(mv, OP1, Valor1, ipAct, (~OP2) & 0x03);
             if (Cod == 0x03)
@@ -64,7 +61,7 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de e
             if (Errores(*mv))
                 return 1;
         }
-        else if (Cod == 0x1A) // operacion not
+        else if (Cod == 0x1A)
         {
             setOperando(mv, OP2, Valor2, ipAct, 0);
             if (Errores(*mv))
@@ -81,11 +78,10 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de e
     {
 
         mv->VecError[2].valor = 1;
-        // error fallo de segmento
         return 1;
     }
     else
-        return 0; // encontre stop
+        return 0;
 }
 
 void muestRegi(char muest[], char *NomReg[][4])
@@ -155,29 +151,29 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
         OP1 = (inst >> 4) & 0x03;
         OP2 = (inst >> 6) & 0x03;
 
-        printf("[%04X] %02X ", IPaux, (unsigned)inst); // muestro pos de memoria e instruccion
+        printf("[%04X] %02X ", IPaux, (unsigned)inst); 
 
-        for (i = 0; i < ((~OP2) & 0x03); i++) // muestro info op2
+        for (i = 0; i < ((~OP2) & 0x03); i++) 
         {
             printf("%02X ", mv.RAM[IPaux + 1 + i]);
             muestra2[i] = mv.RAM[IPaux + 1 + i];
         }
 
         j = 0;
-        for (i = ((~OP2) & 0x03); i < (((~OP1) & 0x03) + ((~OP2) & 0x03)); i++) // muestro info op1 arranca mostrando en la pos marcada por inst+1+tamOP2
+        for (i = ((~OP2) & 0x03); i < (((~OP1) & 0x03) + ((~OP2) & 0x03)); i++) 
         {
             printf("%02X ", mv.RAM[IPaux + 1 + i]);
             muestra1[j] = mv.RAM[IPaux + 1 + i];
             j++;
         }
 
-        for (i = (((~OP1) & 0x03) + ((~OP2) & 0x03)); i < 6; i++) // completo los espacios
+        for (i = (((~OP1) & 0x03) + ((~OP2) & 0x03)); i < 6; i++)
             printf("   ");
-        printf("| %s ", codigosOperacion[Cod]); // muestro mnemonico
+        printf("| %s ", codigosOperacion[Cod]);
 
-        if (OP1 != 3) // hay op1
+        if (OP1 != 3)
         {
-            switch (OP1) // muestro op1
+            switch (OP1)
             {
             case 0:
                 muestMem(muestra1, NomReg);
@@ -189,10 +185,10 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
                 muestRegi(muestra1, NomReg);
                 break;
             }
-            if (OP2 != 3) // hay op2
+            if (OP2 != 3)
             {
                 printf(",");
-                switch (OP2) // muestro op2
+                switch (OP2) 
                 {
                 case 0:
                     muestMem(muestra2, NomReg);
@@ -206,8 +202,8 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
                 }
             }
         }
-        else             // no hay op1
-            switch (OP2) // muestro op2 (si no hay no hace nada)
+        else          
+            switch (OP2) 
             {
             case 0:
                 muestMem(muestra2, NomReg);
@@ -220,14 +216,14 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
                 break;
             }
         printf("\n");
-        IPaux += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); // paso a la proxima instruccion
+        IPaux += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); 
     }
 }
 
 int main(int argc, char *argv[])
 {
     CodOpe codigosOperacion[32] =
-        {"MOV", "ADD", "SUB", "SWAP", "MUL", "DIV", "CMP", "SHL", "SHR", "AND", "OR", "XOR", "RND", "SYS", "JMP", "JZ", "JP", "JN", "JNZ", "JNP", "JNN", "LDL", "LDH", "NOT", "STOP"};
+        {"MOV", "ADD", "SUB", "SWAP", "MUL", "DIV", "CMP", "SHL", "SHR", "AND", "OR", "XOR", "RND","","","", "SYS", "JMP", "JZ", "JP", "JN", "JNZ", "JNP", "JNN", "LDL", "LDH", "NOT", "PUSH", "POP", "CALL", "RET", "STOP"};
     char aux[3];
     int TamC, i, bandera;
     FILE *arch = NULL;
@@ -238,7 +234,6 @@ int main(int argc, char *argv[])
     {
         strcpy(codigosOperacion[i + 3], codigosOperacion[i]);
     }
-    // printf("Iniciando...");
     for (i = 0; i < 7; i++)
     {
         mv.VecError[i].valor = 0;
@@ -271,59 +266,51 @@ int main(int argc, char *argv[])
         printf("No hay archivo");
     if (arch != NULL)
     {
-        // printf("\nAbriendo Archivo...");
         fread(mv.header.ident, 1, 5, arch);
-        // printf("\n%s", header.ident);
         fread(&mv.header.v, 1, 1, arch);
-        // printf("\n%x", header.verc);
         fread(aux, 1, 2, arch);
-        // printf("\nLeyendo Archivo...");
         TamC = (aux[0] << 8) | aux[1];
         if (strcmp(mv.header.ident, "VMX24") == 0)
             if (mv.header.v == 0x01 || 0x02)
             {
-                // TamC = atoi(aux);
-                // printf("\n%d tamC", TamC);
-                if (TamC <= MaxMem)
+                mv.TDS[0].base = 0;
+                mv.TDS[0].tam = TamC;
+                if (mv.header.v == 0x01)
                 {
-                    mv.TDS[0].base = 0;
-                    mv.TDS[0].tam = TamC;
-                    if (mv.header.v == 0x01)
-                    {
 
-                        mv.TDS[1].base = TamC;
-                        mv.TDS[1].tam = MaxMem - TamC;
-                        mv.Regs[CS] = mv.Regs[IP] = 0;
-                        mv.Regs[DS] = 0x00010000;
-                    }
-                    else
-                    {
-                        fread(&mv.TDS)
-                            mv.TDS[];
-                    }
-                    for (i = 0; i < TamC; i++)
-                    {
-                        fread(&mv.RAM[i], 1, 1, arch);
-                        // printf("\n%x", mv.RAM[i]);
-                    }
-                    Ejecuta(&mv, codigosOperacion);
-                    for (i = 0; i < 4; i++)
-                        if (mv.VecError[i].valor == 0)
-                            printf("");
-                        else
-                            printf(" \n%s", mv.VecError[i].descripcion);
-                    i = 0;
-                    bandera = 0;
-                    while (i < argc && bandera != 1)
-                        if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "-D") == 0)
-                            bandera = 1;
-                        else
-                            i++;
-                    if (bandera == 1)
-                        Disassembler(mv, codigosOperacion);
+                    mv.TDS[1].base = TamC;
+                    mv.TDS[1].tam = TamC;
+                    mv.Regs[CS] = mv.Regs[IP] = 0;
+                    mv.Regs[DS] = 0x00010000;
                 }
                 else
-                    printf("\nNo hay memoria suficiente para almacenar el codigo. ");
+                {
+                    for (i = 2; i <= 4; i++)
+                    {
+
+                        mv.TDS[i].base = (mv.TDS[i - 1].tam + mv.TDS[i - 1].base);
+                        fread(&mv.TDS[2].tam, 1, 2, arch);
+                    }
+                }
+                for (i = 0; i < TamC; i++)
+                {
+                    fread(&mv.RAM[i], 1, 1, arch);
+                }
+                Ejecuta(&mv, codigosOperacion);
+                for (i = 0; i < 4; i++)
+                    if (mv.VecError[i].valor == 0)
+                        printf("");
+                    else
+                        printf(" \n%s", mv.VecError[i].descripcion);
+                i = 0;
+                bandera = 0;
+                while (i < argc && bandera != 1)
+                    if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "-D") == 0)
+                        bandera = 1;
+                    else
+                        i++;
+                if (bandera == 1)
+                    Disassembler(mv, codigosOperacion);
             }
             else
                 printf("\nVersion no valida. ");
