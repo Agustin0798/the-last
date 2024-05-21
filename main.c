@@ -132,12 +132,12 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
     char *NomReg[16][4] = {
         {"CS", "", "", ""},
         {"DS", "", "", ""},
-        {"ES", "", "", ""},
-        {"SS", "", "", ""},
-        {"KS", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
         {"IP", "", "", ""},
-        {"SP", "", "", ""},
-        {"BP", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
         {"CC", "", "", ""},
         {"AC", "", "", ""},
         {"EAX", "AL", "AH", "AX"},
@@ -284,46 +284,48 @@ int main(int argc, char *argv[])
             {
                 // TamC = atoi(aux);
                 // printf("\n%d tamC", TamC);
-                if (TamC <= MaxMem)
-                {
-                    mv.TDS[0].base = 0;
-                    mv.TDS[0].tam = TamC;
-                    if (mv.header.v == 0x01)
-                    {
 
-                        mv.TDS[1].base = TamC;
-                        mv.TDS[1].tam = MaxMem - TamC;
-                        mv.Regs[CS] = mv.Regs[IP] = 0;
-                        mv.Regs[DS] = 0x00010000;
-                    }
-                    else
-                    {
-                        fread(&mv.TDS)
-                            mv.TDS[];
-                    }
-                    for (i = 0; i < TamC; i++)
-                    {
-                        fread(&mv.RAM[i], 1, 1, arch);
-                        // printf("\n%x", mv.RAM[i]);
-                    }
-                    Ejecuta(&mv, codigosOperacion);
-                    for (i = 0; i < 4; i++)
-                        if (mv.VecError[i].valor == 0)
-                            printf("");
-                        else
-                            printf(" \n%s", mv.VecError[i].descripcion);
-                    i = 0;
-                    bandera = 0;
-                    while (i < argc && bandera != 1)
-                        if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "-D") == 0)
-                            bandera = 1;
-                        else
-                            i++;
-                    if (bandera == 1)
-                        Disassembler(mv, codigosOperacion);
+                mv.TDS[0].base = 0;
+                mv.TDS[0].tam = TamC;
+                if (mv.header.v == 0x01)
+                {
+
+                    mv.TDS[1].base = TamC;
+                    mv.TDS[1].tam = TamC;
+                    mv.Regs[CS] = mv.Regs[IP] = 0;
+                    mv.Regs[DS] = 0x00010000;
                 }
                 else
-                    printf("\nNo hay memoria suficiente para almacenar el codigo. ");
+                {
+                    for (i = 2; i <= 4; i++)
+                    {
+
+                        mv.TDS[i].base = (mv.TDS[i - 1].tam + mv.TDS[i - 1].base);
+                        fread(&mv.TDS[2].tam, 1, 2, arch);
+                        // TODO
+                        // mv.Regs[i] =
+                    }
+                }
+                for (i = 0; i < TamC; i++)
+                {
+                    fread(&mv.RAM[i], 1, 1, arch);
+                    // printf("\n%x", mv.RAM[i]);
+                }
+                Ejecuta(&mv, codigosOperacion);
+                for (i = 0; i < 4; i++)
+                    if (mv.VecError[i].valor == 0)
+                        printf("");
+                    else
+                        printf(" \n%s", mv.VecError[i].descripcion);
+                i = 0;
+                bandera = 0;
+                while (i < argc && bandera != 1)
+                    if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "-D") == 0)
+                        bandera = 1;
+                    else
+                        i++;
+                if (bandera == 1)
+                    Disassembler(mv, codigosOperacion);
             }
             else
                 printf("\nVersion no valida. ");
