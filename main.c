@@ -74,7 +74,9 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) // hacerlo int para manejo de e
         if (mv->enter == 1)
         {
             mv->enter = 0;
-            funcion[0x10](0, 'F', mv);
+            Valor1 = 0;
+            Valor2 = 0xF;
+            funcion[0x10](&Valor1, &Valor2, mv);
         }
     }
     if (mv->Regs[IP] > mv->TDS[CS].tam)
@@ -301,9 +303,13 @@ int main(int argc, char *argv[])
                     {
 
                         mv.TDS[i].base = (mv.TDS[i - 1].tam + mv.TDS[i - 1].base);
-                        fread(&mv.TDS[2].tam, 1, 2, arch);
+                        fread(&mv.TDS[i].tam, 1, 2, arch);
+                        printf("\n%x\n", mv.TDS[i].tam);
                         // TODO
-                        // mv.Regs[i] =
+                        mv.Regs[i] = mv.TDS[i].base;
+                        mv.Regs[i] << 2;
+                        mv.Regs[i] |= mv.TDS[i].tam;
+                        printf("%x\n", mv.Regs[i]);
                     }
                 }
                 for (i = 0; i < TamC; i++)
