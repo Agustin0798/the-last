@@ -21,21 +21,21 @@ int Errores(MV mv)
     return e;
 }
 
-int Ejecuta(MV *mv, CodOpe codigosOperacion[32]) 
+int Ejecuta(MV *mv, CodOpe codigosOperacion[32])
 {
     char Cod, OP1, OP2, inst = 0;
     int Valor1, Valor2, Iptemp, ipAct;
 
     inst = mv->RAM[mv->Regs[IP]];
 
-    while ((mv->Regs[IP] < (mv->TDS[CS].base + mv->TDS[CS].tam)) && strcmp(codigosOperacion[inst & 0b00011111], "STOP")) 
+    while ((mv->Regs[IP] < (mv->TDS[CS].base + mv->TDS[CS].tam)) && strcmp(codigosOperacion[inst & 0b00011111], "STOP"))
     {
         Cod = inst & 0b00011111;
         OP1 = (inst >> 4) & 0x03;
         OP2 = (inst >> 6) & 0x03;
 
-        if ((Cod == 0x03 || Cod == 0x1A) && OP2 == 0b01) 
-            return 1;                                   
+        if ((Cod == 0x03 || Cod == 0x1A) && OP2 == 0b01)
+            return 1;
         Iptemp = 0;
         Valor2 = getOperando(mv, OP2, mv->Regs[IP], Iptemp);
         Iptemp = (~OP2) & 0x03;
@@ -47,13 +47,13 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32])
             return 1;
         }
         ipAct = mv->Regs[IP];
-        mv->Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); 
+        mv->Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03);
         funcion[Cod](&Valor1, &Valor2, mv);
         if (Errores(*mv))
         {
             return 1;
         }
-        if ((Cod & 0b10000) == 0b00000 && Cod != 0x06 && (Cod != 0x10)) 
+        if ((Cod & 0b10000) == 0b00000 && Cod != 0x06 && (Cod != 0x10))
         {
             setOperando(mv, OP1, Valor1, ipAct, (~OP2) & 0x03);
             if (Cod == 0x03)
@@ -71,7 +71,9 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32])
         if (mv->enter == 1)
         {
             mv->enter = 0;
-            funcion[0x10](0, 'F', mv);
+            Valor1 = 0;
+            Valor2 = 0xF;
+            funcion[0x10](&Valor1, &Valor2, mv);
         }
     }
     if (mv->Regs[IP] > mv->TDS[CS].tam)
@@ -128,12 +130,12 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
     char *NomReg[16][4] = {
         {"CS", "", "", ""},
         {"DS", "", "", ""},
-        {"ES", "", "", ""},
-        {"SS", "", "", ""},
-        {"KS", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
         {"IP", "", "", ""},
-        {"SP", "", "", ""},
-        {"BP", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
         {"CC", "", "", ""},
         {"AC", "", "", ""},
         {"EAX", "AL", "AH", "AX"},
@@ -151,16 +153,16 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
         OP1 = (inst >> 4) & 0x03;
         OP2 = (inst >> 6) & 0x03;
 
-        printf("[%04X] %02X ", IPaux, (unsigned)inst); 
+        printf("[%04X] %02X ", IPaux, (unsigned)inst);
 
-        for (i = 0; i < ((~OP2) & 0x03); i++) 
+        for (i = 0; i < ((~OP2) & 0x03); i++)
         {
             printf("%02X ", mv.RAM[IPaux + 1 + i]);
             muestra2[i] = mv.RAM[IPaux + 1 + i];
         }
 
         j = 0;
-        for (i = ((~OP2) & 0x03); i < (((~OP1) & 0x03) + ((~OP2) & 0x03)); i++) 
+        for (i = ((~OP2) & 0x03); i < (((~OP1) & 0x03) + ((~OP2) & 0x03)); i++)
         {
             printf("%02X ", mv.RAM[IPaux + 1 + i]);
             muestra1[j] = mv.RAM[IPaux + 1 + i];
@@ -188,7 +190,7 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
             if (OP2 != 3)
             {
                 printf(",");
-                switch (OP2) 
+                switch (OP2)
                 {
                 case 0:
                     muestMem(muestra2, NomReg);
@@ -202,8 +204,8 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
                 }
             }
         }
-        else          
-            switch (OP2) 
+        else
+            switch (OP2)
             {
             case 0:
                 muestMem(muestra2, NomReg);
@@ -216,14 +218,14 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
                 break;
             }
         printf("\n");
-        IPaux += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03); 
+        IPaux += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03);
     }
 }
 
 int main(int argc, char *argv[])
 {
     CodOpe codigosOperacion[32] =
-        {"MOV", "ADD", "SUB", "SWAP", "MUL", "DIV", "CMP", "SHL", "SHR", "AND", "OR", "XOR", "RND","","","", "SYS", "JMP", "JZ", "JP", "JN", "JNZ", "JNP", "JNN", "LDL", "LDH", "NOT", "PUSH", "POP", "CALL", "RET", "STOP"};
+        {"MOV", "ADD", "SUB", "SWAP", "MUL", "DIV", "CMP", "SHL", "SHR", "AND", "OR", "XOR", "RND", "", "", "", "SYS", "JMP", "JZ", "JP", "JN", "JNZ", "JNP", "JNN", "LDL", "LDH", "NOT", "PUSH", "POP", "CALL", "RET", "STOP"};
     char aux[3];
     int TamC, i, bandera;
     FILE *arch = NULL;

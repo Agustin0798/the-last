@@ -31,7 +31,7 @@ void ADD(int *a, int *b, MV *mv)
 {
 
     *a += *b;
-    
+
     modificaCC(a, mv);
 }
 
@@ -55,10 +55,10 @@ void DIV(int *a, int *b, MV *mv)
         modificaCC(a, mv);
     }
     else
-        mv->VecError[0].valor = 1; 
+        mv->VecError[0].valor = 1;
 }
 
-void SWAP(int *a, int *b, MV *mv) 
+void SWAP(int *a, int *b, MV *mv)
 {
     int aux;
 
@@ -154,7 +154,7 @@ void JNZ(int *a, int *b, MV *mv)
 
     if ((mv->Regs[CC] & 0x40000000) != 0)
     {
-         mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | ((*b) & 0x0000FFFF);
+        mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | ((*b) & 0x0000FFFF);
     }
 }
 void LDL(int *a, int *b, MV *mv)
@@ -177,57 +177,57 @@ void STOP(int *a, int *b, MV *mv)
 
 void PUSH(int *a, int *b, MV *mv)
 {
-    int dirFis,dirLog,seg,offset;
+    int dirFis, dirLog, seg, offset;
 
-    dirLog = mv->Regs[SP]-=4;
+    dirLog = mv->Regs[SP] -= 4;
     seg = (dirLog >> 16) & 0x0000FFFF;
     offset = dirLog & 0x0000FFFF;
     dirFis = mv->TDS[seg].base + offset;
     if (dirFis < mv->TDS[seg].base)
-        mv->VecError[5].valor=1; 
+        mv->VecError[5].valor = 1; // se produjo stack overflow
     else
     {
-        mv->RAM[dirFis]=((*b) >> 24) & 0x000000FF;
-        mv->RAM[dirFis+1]=((*b) >> 16) & 0x000000FF;
-        mv->RAM[dirFis+2]=((*b) >> 8) & 0x000000FF;
-        mv->RAM[dirFis+3]=(*b) & 0x000000FF;
+        mv->RAM[dirFis] = ((*b) >> 24) & 0x000000FF;
+        mv->RAM[dirFis + 1] = ((*b) >> 16) & 0x000000FF;
+        mv->RAM[dirFis + 2] = ((*b) >> 8) & 0x000000FF;
+        mv->RAM[dirFis + 3] = (*b) & 0x000000FF;
     }
 }
 
 void POP(int *a, int *b, MV *mv)
 {
-    int dirFis,dirLog,seg,offset,dato;
+    int dirFis, dirLog, seg, offset, dato;
 
-    dirLog = mv->Regs[SP]+=4;
+    dirLog = mv->Regs[SP] += 4;
     seg = (dirLog >> 16) & 0x0000FFFF;
     offset = dirLog & 0x0000FFFF;
     dirFis = mv->TDS[seg].base + offset;
     if (dirFis >= (mv->TDS[seg].base + mv->TDS[seg].tam))
-        mv->VecError[6].valor=1; 
+        mv->VecError[6].valor = 1; // se produjo stack underflow;
     else
     {
-        dato=0;
-        dato=(dato & 0x00FFFFFF) | (mv->RAM[dirFis-4] << 24);
-        dato=(dato & 0xFF00FFFF) | (mv->RAM[dirFis-3] << 16);
-        dato=(dato & 0xFFFF00FF) | (mv->RAM[dirFis-2] << 8);
-        dato=(dato & 0xFFFFFF00) | (mv->RAM[dirFis-1]);
-        (*b)=dato;
+        dato = 0;
+        dato = (dato & 0x00FFFFFF) | (mv->RAM[dirFis - 4] << 24);
+        dato = (dato & 0xFF00FFFF) | (mv->RAM[dirFis - 3] << 16);
+        dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis - 2] << 8);
+        dato = (dato & 0xFFFFFF00) | (mv->RAM[dirFis - 1]);
+        (*b) = dato;
     }
 }
 
 void CALL(int *a, int *b, MV *mv)
 {
-    int ip=mv->Regs[IP];
+    int ip = mv->Regs[IP];
 
-    PUSH(a,&ip,mv);
-    JMP(a,b,mv);
+    PUSH(a, &ip, mv);
+    JMP(a, b, mv);
 }
 
 void RET(int *a, int *b, MV *mv)
 {
     int auxIP;
 
-    POP(a,&auxIP,mv);
+    POP(a, &auxIP, mv);
     mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | (auxIP & 0x0000FFFF);
 }
 
@@ -238,17 +238,17 @@ void SYS(int *a, int *b, MV *mv)
     unsigned int cantCel = mv->Regs[ECX] & 0x000000FF;
     unsigned int modSys = mv->Regs[EAX] & 0x000000FF;
     int i, j, numero;
-    char aux,Op;
+    char aux, Op;
     char *string;
     int dato;
     FILE *archIMG;
 
     switch (*b)
     {
-    case 1: 
+    case 1:
         seg = dirLog >> 16;
         offset = dirLog & 0x0000FFFF;
-        if (seg < 5) 
+        if (seg < 5)
         {
             dirFis = mv->TDS[seg].base + offset;
             i = 0;
@@ -292,7 +292,7 @@ void SYS(int *a, int *b, MV *mv)
             dirFis = mv->TDS[seg].base + offset;
             printf("\n%d tAMANO\n", tamCel);
             i = 0;
-            if (dirFis >= mv->TDS[seg].base) 
+            if (dirFis >= mv->TDS[seg].base)
             {
 
                 while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
@@ -344,74 +344,76 @@ void SYS(int *a, int *b, MV *mv)
             }
         }
         break;
-    case 'F':
-            if (mv->enter == 1)
+    case 0xF:
+        if (mv->enter == 1)
+        {
+            archIMG = fopen(mv->imagen, "Wb");
+            if (archIMG != NULL)
             {
-                archIMG=fopen(mv->imagen,"Wb");
-                if (archIMG != NULL)
+                fwrite("VMX24", 5, 1, archIMG);
+                fwrite("1", 1, 1, archIMG);
+                fwrite(&(mv->tamMem), 2, 1, archIMG);
+                for (i = 0; i < 16; i++)
+                    fwrite(&(mv->Regs[i]), 4, 1, archIMG);
+                for (i = 0; i < 5; i++)
                 {
-                    fwrite("VMX24",5,1,archIMG);
-                    fwrite('1',1,1,archIMG);
-                    fwrite(mv->tamMem,2,1,archIMG);
-                    for (i=0; i<16; i++)
-                        fwrite(mv->Regs[i],4,1,archIMG);
-                    for (i=0; i<5; i++)
-                    {
-                        fwrite(mv->TDS[i].base,2,1,archIMG);
-                        fwrite(mv->TDS[i].tam,2,1,archIMG);
-                    }
-                    for (i=0; i<mv->tamMem; i++)
-                        fwrite(mv->RAM[i],1,1,archIMG);
-                    switch (getchar())
-                    {
-                    case '\n':mv->enter=1;
-                        break;
-                    case 'q':
-                    case 'Q': mv->Regs[IP]=(mv->Regs[IP] & 0xFFFF0000) | mv->tamMem;
-                        break;
-                    case 'g':
-                    case 'G':
-                        break;
-                    }
+                    fwrite(&(mv->TDS[i].base), 2, 1, archIMG);
+                    fwrite(&(mv->TDS[i].tam), 2, 1, archIMG);
+                }
+                for (i = 0; i < mv->tamMem; i++)
+                    fwrite(&(mv->RAM[i]), 1, 1, archIMG);
+                switch (getchar())
+                {
+                case '\n':
+                    mv->enter = 1;
+                    break;
+                case 'q':
+                case 'Q':
+                    mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | mv->tamMem;
+                    break;
+                case 'g':
+                case 'G':
+                    break;
                 }
             }
+        }
         break;
     case 3:
-            seg= dirLog >> 16;
-            offset= dirLog & 0x0000FFFF;
-            if (seg < 5)
+        seg = dirLog >> 16;
+        offset = dirLog & 0x0000FFFF;
+        if (seg < 5)
+        {
+            dirFis = mv->TDS[seg].base + offset;
+            if ((dirFis + cantCel + 1) < (mv->TDS[seg].base + mv->TDS[seg].tam))
             {
-                dirFis= mv->TDS[seg].base + offset;
-                if ((dirFis + cantCel +1) < (mv->TDS[seg].base + mv->TDS[seg].tam))
+                gets(string);
+                i = 0;
+                while ((i < (cantCel)) && (string[i] != '\0'))
                 {
-                    gets(string);
-                    i=0;
-                    while ((i < (cantCel)) && (string[i] != '\0'))
-                    {
-                        mv->RAM[dirFis+i]=string[i]; 
-                        i++;
-                    }
-                    mv->RAM[dirFis+i]='\0';
+                    mv->RAM[dirFis + i] = string[i];
+                    i++;
                 }
+                mv->RAM[dirFis + i] = '\0';
             }
+        }
         break;
     case 4:
-            seg= dirLog >> 16;
-            offset= dirLog & 0x0000FFFF;
-            if (seg < 5)
+        seg = dirLog >> 16;
+        offset = dirLog & 0x0000FFFF;
+        if (seg < 5)
+        {
+            dirFis = mv->TDS[seg].base + offset;
+            i = 0;
+            aux = mv->RAM[dirFis];
+            while (aux != '\0')
             {
-                dirFis= mv->TDS[seg].base + offset;
-                i=0;
-                aux=mv->RAM[dirFis];
-                while (aux != '\0')
-                {
-                    string[i]=aux;
-                    i++;
-                    aux=mv->RAM[dirFis+i];
-                }
-                string[i]=aux;
-                puts(string);
+                string[i] = aux;
+                i++;
+                aux = mv->RAM[dirFis + i];
             }
+            string[i] = aux;
+            puts(string);
+        }
         break;
     }
 }
