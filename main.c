@@ -275,10 +275,9 @@ int main(int argc, char *argv[])
         encontradoVMI = strstr(argv[i], ".vmi");
         if (strstr(argv[i], "m="))
         {
-            argv[i][0] = 0;
-            argv[i][1] = 0;
-            mv.tamMem = atoi(argv[i]);
-            printf("\n%d\n", mv.tamMem);
+            argv[i][0] = '0';
+            argv[i][1] = '0';
+            mv.tamMem = (int)strtol(argv[i], NULL, 10);
         }
         if (encontradoVMX != NULL)
         {
@@ -325,7 +324,8 @@ int main(int argc, char *argv[])
                     for (i = 0; i <= 4; i++)
                     {
 
-                        fread(mv.header.tamanios[i], 1, 2, arch);
+                        fread(&(mv.header.tamanios[i]), 1, 2, arch);
+                        printf("%x ", mv.header.tamanios[i]); // Error Aca
                     }
 
                     fread(&(mv.header.offsetEP), 1, 2, arch);
@@ -344,7 +344,7 @@ int main(int argc, char *argv[])
                     {
                         if (mv.header.tamanios[i] != 0)
                         {
-                            if (ultimoIndice = -1)
+                            if (ultimoIndice == -1)
                             {
 
                                 mv.TDS[++ultimoIndice].base = 0;
@@ -353,8 +353,10 @@ int main(int argc, char *argv[])
                             {
 
                                 mv.TDS[++ultimoIndice].base = mv.TDS[ultimoIndice - 1].base + mv.TDS[ultimoIndice - 1].tam;
+                                printf("\nBase %d \n", mv.TDS[ultimoIndice].base);
                             }
                             mv.TDS[ultimoIndice].tam = mv.header.tamanios[i];
+                            printf("\nTamano %d", mv.TDS[ultimoIndice].tam);
                             mv.Regs[i] = ultimoIndice << 16;
                             // mv.Regs[i]<<=16;
                         }
@@ -365,6 +367,7 @@ int main(int argc, char *argv[])
                 }
                 if ((mv.TDS[ultimoIndice].base + mv.TDS[ultimoIndice].tam) <= mv.tamMem)
                 {
+                    printf("\n%d\n", (mv.TDS[ultimoIndice].base + mv.TDS[ultimoIndice].tam));
                     seg = mv.Regs[CS] >> 16;
                     for (i = mv.TDS[seg].base; i < (mv.TDS[seg].base + mv.TDS[seg].tam); i++)
                     {
