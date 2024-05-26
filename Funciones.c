@@ -421,5 +421,9 @@ void SYS(int *a, int *b, MV *mv)
                 mv->VecError[2].valor = 1;
         }
         break;
+    default:
+        printf("\nEntro");
+        mv->VecError[0].valor = 1;
+        break;
     }
 }

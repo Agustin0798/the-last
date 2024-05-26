@@ -366,7 +366,9 @@ int main(int argc, char *argv[])
                     }
                     i = (mv.Regs[SS] & 0xFFFF0000);
                     mv.Regs[SP] = i | (mv.TDS[i >> 16].base + mv.TDS[i >> 16].tam);
+                    printf("\n%x IP\n%x", mv.Regs[IP], mv.Regs[CS]);
                     mv.Regs[IP] = mv.Regs[CS] + mv.header.offsetEP;
+                    printf("\n%x IP", mv.Regs[IP]);
                 }
 
                 if ((mv.TDS[ultimoIndice].base + mv.TDS[ultimoIndice].tam) <= mv.tamMem)
@@ -384,6 +386,7 @@ int main(int argc, char *argv[])
                             fread(&mv.RAM[i], 1, 1, arch);
                         }
                     }
+                    printf("\n%x", mv.Regs[IP]);
                     iniciaEjecucion(argc, argv, mv, codigosOperacion);
                 }
                 else
