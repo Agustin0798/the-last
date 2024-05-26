@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int leerParametro(MV *mv, char op, int ipAct, int ipTemp) 
+int leerParametro(MV *mv, char op, int ipAct, int ipTemp)
 {
   int i, paramValue = 0;
   char aux;
@@ -13,23 +13,23 @@ int leerParametro(MV *mv, char op, int ipAct, int ipTemp)
     {
 
       aux = (unsigned)mv->RAM[(ipAct & 0x0000ffff) + ipTemp + i];
-      
-      paramValue = ((paramValue << 8) | (aux & 0xff)); 
+
+      paramValue = ((paramValue << 8) | (aux & 0xff));
     }
     else
     {
 
-      mv->VecError[2].valor = 1; 
+      mv->VecError[2].valor = 1;
     }
   }
- 
+
   return paramValue;
 }
-int leerMemoria(MV *mv, int value) 
+int leerMemoria(MV *mv, int value)
 {
   char tamLectura = value >> 20;
   char codReg = (value >> 16) & 0x0f;
-  char offset = value & 0x00ffff; 
+  char offset = value & 0x00ffff;
   int i, aux, dato = 0;
 
   char s;
@@ -47,19 +47,18 @@ int leerMemoria(MV *mv, int value)
     {
       mv->VecError[2]
           .valor = 1;
-      return -1; 
+      return -1;
     }
   }
-  
+
   return dato;
 }
 void escribeMemoria(MV *mv, int valor, int parametro)
 {
-  char s, codReg = (parametro >> 16) & 0x0f,tamEscritura=(~(parametro>>22)&0x3)+1;
+  char s, codReg = (parametro >> 16) & 0x0f, tamEscritura = (~(parametro >> 22) & 0x3) + 1;
   int i;
-  char offset =0;
-  offset=( parametro & 0x0000ffff);
-  printf("\n%d\n",tamEscritura);
+  char offset = 0;
+  offset = (parametro & 0x0000ffff);
   int direccionFisica;
   if (codReg == 0)
   {
@@ -70,15 +69,14 @@ void escribeMemoria(MV *mv, int valor, int parametro)
     s = ((*mv).Regs[codReg] >> 16) & 0x0000ffff;
   }
   direccionFisica = (*mv).TDS[s].base + ((*mv).Regs[codReg] & 0x0000ffff) + offset;
-  if (((*mv).TDS[s].base <= direccionFisica) && ((direccionFisica +tamEscritura) < (*mv).TDS[s].base + (*mv).TDS[s].tam))
+  if (((*mv).TDS[s].base <= direccionFisica) && ((direccionFisica + tamEscritura) < (*mv).TDS[s].base + (*mv).TDS[s].tam))
   {
 
-    for (i = tamEscritura-1; i >= 0; i--)
+    for (i = tamEscritura - 1; i >= 0; i--)
     {
       mv->RAM[direccionFisica] = 0;
 
       mv->RAM[direccionFisica] |= (unsigned char)(((valor >> (8 * i)) & 0xFF));
-      printf("\n%d %d \n",i,(unsigned char)(((valor >> (8 * i)) & 0xFF)));
       direccionFisica++;
     }
   }
@@ -88,7 +86,7 @@ void escribeMemoria(MV *mv, int valor, int parametro)
   }
 }
 int inmediato(MV mv, int value)
-{ 
+{
   return value;
 }
 
@@ -120,13 +118,12 @@ void escribeRegistro(MV *mv, int valor, int parametro)
     (*mv).Regs[parametro & 0x0f] = valor;
     break;
   case 1:
-    
+
     (*mv).Regs[parametro & 0x0f] = ((*mv).Regs[parametro & 0x0f] & 0xffffff00) | (valor & 0x000000ff);
-    
+
     break;
   case 2:
 
-   
     (*mv).Regs[parametro & 0x0f] = ((*mv).Regs[parametro & 0x0f] & 0xffff00ff) | ((valor & 0x000000ff) << 8);
 
     break;
@@ -154,7 +151,7 @@ void setOperando(MV *mv, char op, int dato, int ipAct, int ipTemp)
   }
 }
 int getOperando(MV *mv, char op, int ipAct, int ipTemp)
-{ 
+{
 
   int parametro, value = 0;
   parametro = leerParametro(mv, (~op) & 0x03, mv->Regs[IP], ipTemp);
@@ -165,8 +162,8 @@ int getOperando(MV *mv, char op, int ipAct, int ipTemp)
     break;
 
   case 1:
-    value =(parametro);
-   
+    value = (parametro);
+
     break;
 
   case 2:

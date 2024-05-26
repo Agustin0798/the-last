@@ -296,7 +296,7 @@ int main(int argc, char *argv[])
     }
     if (arch != NULL)
     {
-        for (i = 0; i <= 3; i++)
+        for (i = 0; i <= 4; i++)
         {
             mv.header.tamanios[i] = 0;
         }
@@ -324,22 +324,17 @@ int main(int argc, char *argv[])
                     fread(aux, 1, 2, arch);
                     TamC = (aux[0] << 8) | aux[1];
                     mv.header.tamanios[CS] = TamC;
-                    for (i = 1; i <= 3; i++)
+                    for (i = 1; i <= 4; i++)
                     {
 
                         fread(&aux, 1, 2, arch);
-                        tamSegAux = (aux[0] << 8) | aux[1];
-                        mv.header.tamanios[i] = tamSegAux;
-                        printf("\n%x\n", tamSegAux); // Error Aca
+                        mv.header.tamanios[i] = (aux[0] << 8) | aux[1];
                     }
-                    // printf("\n%x\n", mv.header.tamanios[CS]); // Error Aca
-                    // printf("\n%x\n", mv.header.tamanios[DS]); // Error Aca
-                    // printf("\n%x\n", mv.header.tamanios[ES]); // Error Aca
 
-                    fread(&(mv.header.offsetEP), 1, 2, arch);
-                    if (mv.header.tamanios[3] != 0x400)
+                    fread(&aux, 1, 2, arch);
+                    mv.header.offsetEP = (aux[0] << 8) | aux[1];
+                    if (mv.header.tamanios[KS] != 0)
                     {
-                        printf("\n%xNoDeberiaMostrar\n", mv.header.tamanios[KS]); // Error Aca
                         mv.Regs[KS] = 0;
                         mv.TDS[0].base = 0;
                         mv.TDS[0].tam = mv.header.tamanios[KS];
@@ -351,22 +346,20 @@ int main(int argc, char *argv[])
                     }
                     for (i = 0; i <= 3; i++)
                     {
-                        if (mv.header.tamanios[i] != 0x0400)
+                        if (mv.header.tamanios[i] != 0)
                         {
-                            if (ultimoIndice == -1)
+                            ultimoIndice++;
+                            if (ultimoIndice - 1 == -1)
                             {
-
-                                mv.TDS[++ultimoIndice].base = 0;
-                                printf("\nBase %d \n", mv.TDS[ultimoIndice].base);
+                                mv.TDS[ultimoIndice].base = 0;
                             }
                             else
                             {
 
-                                mv.TDS[++ultimoIndice].base = mv.TDS[ultimoIndice - 1].base + mv.TDS[ultimoIndice - 1].tam;
-                                printf("\nBase %d \n", mv.TDS[ultimoIndice].base);
+                                mv.TDS[ultimoIndice].base = mv.TDS[ultimoIndice - 1].base + mv.TDS[ultimoIndice - 1].tam;
                             }
                             mv.TDS[ultimoIndice].tam = mv.header.tamanios[i];
-                            printf("\nTamano %d", mv.TDS[ultimoIndice].tam);
+
                             mv.Regs[i] = ultimoIndice << 16;
                             // mv.Regs[i]<<=16;
                         }
@@ -375,7 +368,7 @@ int main(int argc, char *argv[])
                     mv.Regs[SP] = i | (mv.TDS[i >> 16].base + mv.TDS[i >> 16].tam);
                     mv.Regs[IP] = mv.Regs[CS] + mv.header.offsetEP;
                 }
-                printf("\n%d %d\n", (mv.TDS[ultimoIndice].base + mv.TDS[ultimoIndice].tam), mv.tamMem);
+
                 if ((mv.TDS[ultimoIndice].base + mv.TDS[ultimoIndice].tam) <= mv.tamMem)
                 {
                     seg = mv.Regs[CS] >> 16;
