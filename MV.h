@@ -35,7 +35,7 @@ typedef struct MV
     {
         char ident[6];
         char v;
-        short int offsetEP, tamanios[5]; // 0sizeCS, 1sizeDS, 2sizeES, 3sizeSS, 4sizeKS
+        unsigned short int offsetEP, tamanios[5]; // 0sizeCS, 1sizeDS, 2sizeES, 3sizeSS, 4sizeKS
 
     } header;
     short int tamMem;

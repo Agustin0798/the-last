@@ -6,19 +6,18 @@
 int leerParametro(MV *mv, char op, int ipAct, int ipTemp)
 {
   int i, paramValue = 0;
+  short int dirFis = mv->TDS[ipAct >> 16].base + ipAct & 0xffff;
   char aux;
   for (i = 1; i <= op; i++)
   {
-    if (mv->TDS[mv->Regs[CS]].tam > ipAct + ipTemp + i)
+    if ((mv->TDS[mv->Regs[CS] >> 16].tam + mv->TDS[mv->Regs[CS] >> 16].base) > (dirFis + ipTemp + i))
     {
-
-      aux = (unsigned)mv->RAM[(ipAct & 0x0000ffff) + ipTemp + i];
+      aux = (unsigned)mv->RAM[dirFis + ipTemp + i];
 
       paramValue = ((paramValue << 8) | (aux & 0xff));
     }
     else
     {
-
       mv->VecError[2].valor = 1;
     }
   }
@@ -45,8 +44,7 @@ int leerMemoria(MV *mv, int value)
     }
     else
     {
-      mv->VecError[2]
-          .valor = 1;
+      mv->VecError[2].valor = 1;
       return -1;
     }
   }
@@ -62,7 +60,7 @@ void escribeMemoria(MV *mv, int valor, int parametro)
   int direccionFisica;
   if (codReg == 0)
   {
-    s = DS;
+    s = mv->Regs[DS] >> 16;
   }
   else
   {
@@ -102,7 +100,7 @@ int leerRegistro(MV *mv, int value)
     return mv->Regs[value & 0x0f] & 0x000000ff;
     break;
   case 2:
-    return (mv->Regs[value & 0x0f] & 0x0000ff00) >> 8;
+    return (mv->Regs[value & 0x0f] >> 8) & 0x000000ff;
     break;
   case 3:
     return mv->Regs[value & 0x0f] & 0x0000ffff;
@@ -111,7 +109,7 @@ int leerRegistro(MV *mv, int value)
 }
 void escribeRegistro(MV *mv, int valor, int parametro)
 {
-  char secReg = parametro >> 4;
+  char secReg = (parametro >> 4) & 0b11;
   switch (secReg)
   {
   case 0:

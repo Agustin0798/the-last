@@ -239,7 +239,7 @@ void SYS(int *a, int *b, MV *mv)
     unsigned int modSys = mv->Regs[EAX] & 0x000000FF;
     int i, j, numero;
     char aux, Op;
-    char *string;
+    char *string = NULL, *auxString = NULL;
     int dato;
     FILE *archIMG;
 
@@ -386,14 +386,14 @@ void SYS(int *a, int *b, MV *mv)
             dirFis = mv->TDS[seg].base + offset;
             if ((dirFis >= mv->TDS[seg].base) && ((dirFis + cantCel) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
             {
-                gets(string);
                 i = 0;
-                while ((i < (cantCel)) && (string[i] != '\0'))
+                scanf("%s", string);
+                while ((i < (cantCel)) && (string[i] != 0x0))
                 {
                     mv->RAM[dirFis + i] = string[i];
                     i++;
                 }
-                mv->RAM[dirFis + i] = '\0';
+                mv->RAM[dirFis + i] = 0x0;
             }
         }
         break;
@@ -406,23 +406,27 @@ void SYS(int *a, int *b, MV *mv)
             i = 0;
             aux = mv->RAM[dirFis];
             if ((dirFis >= mv->TDS[seg].base))
-                while (aux != '\0' && ((dirFis + i) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
+            {
+
+                while (aux != 0x00 && ((dirFis + i) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
                 {
-                    string[i] = aux;
+                    // printf("\nEntroA SYS  %c   DirFis:%d TDSTAM:%d", aux, dirFis + i, (mv->TDS[seg].base + mv->TDS[seg].tam));
+                    //*auxString = aux;
+                    // 0
+                    putchar(aux);
+                    // auxString += 1;
+                    // printf("\nEntroA SYS  %c   DirFis:%d TDSTAM:%d ", aux, dirFis + i, (mv->TDS[seg].base + mv->TDS[seg].tam));
                     i++;
                     aux = mv->RAM[dirFis + i];
                 }
-            if (aux == '\0')
-            {
-                string[i] = aux;
-                puts(string);
             }
-            else
+            if (aux != 0x00)
+            {
                 mv->VecError[2].valor = 1;
+            }
         }
         break;
     default:
-        printf("\nEntro");
         mv->VecError[0].valor = 1;
         break;
     }
