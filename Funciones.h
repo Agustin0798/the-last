@@ -57,7 +57,7 @@ void POP(int *a, int *b, MV *mv);
 
 void PUSH(int *a, int *b, MV *mv);
 
-void CALL(int *a, int *b,  MV *mv);
+void CALL(int *a, int *b, MV *mv);
 
 void RET(int *a, int *b, MV *mv);
 

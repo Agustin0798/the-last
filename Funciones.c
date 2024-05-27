@@ -239,7 +239,7 @@ void SYS(int *a, int *b, MV *mv)
     unsigned int modSys = mv->Regs[EAX] & 0x000000FF;
     int i, j, numero;
     char aux, Op;
-    char *string;
+    char *string = NULL, *auxString = NULL;
     int dato;
     FILE *archIMG;
 
@@ -290,7 +290,6 @@ void SYS(int *a, int *b, MV *mv)
         if (seg < 5)
         {
             dirFis = mv->TDS[seg].base + offset;
-            printf("\n%d tAMANO\n", tamCel);
             i = 0;
             if (dirFis >= mv->TDS[seg].base)
             {
@@ -350,7 +349,7 @@ void SYS(int *a, int *b, MV *mv)
             archIMG = fopen(mv->imagen, "Wb");
             if (archIMG != NULL)
             {
-                fwrite("VMX24", 5, 1, archIMG);
+                fwrite("VMI24", 5, 1, archIMG);
                 fwrite("1", 1, 1, archIMG);
                 fwrite(&(mv->tamMem), 2, 1, archIMG);
                 for (i = 0; i < 16; i++)
@@ -362,6 +361,7 @@ void SYS(int *a, int *b, MV *mv)
                 }
                 for (i = 0; i < mv->tamMem; i++)
                     fwrite(&(mv->RAM[i]), 1, 1, archIMG);
+                fclose(archIMG);
                 switch (getchar())
                 {
                 case '\n':
@@ -384,16 +384,16 @@ void SYS(int *a, int *b, MV *mv)
         if (seg < 5)
         {
             dirFis = mv->TDS[seg].base + offset;
-            if ((dirFis + cantCel + 1) < (mv->TDS[seg].base + mv->TDS[seg].tam))
+            if ((dirFis >= mv->TDS[seg].base) && ((dirFis + cantCel) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
             {
-                gets(string);
                 i = 0;
-                while ((i < (cantCel)) && (string[i] != '\0'))
+                scanf("%s", string);
+                while ((i < (cantCel)) && (string[i] != 0x0))
                 {
                     mv->RAM[dirFis + i] = string[i];
                     i++;
                 }
-                mv->RAM[dirFis + i] = '\0';
+                mv->RAM[dirFis + i] = 0x0;
             }
         }
         break;
@@ -405,15 +405,29 @@ void SYS(int *a, int *b, MV *mv)
             dirFis = mv->TDS[seg].base + offset;
             i = 0;
             aux = mv->RAM[dirFis];
-            while (aux != '\0')
+            if ((dirFis >= mv->TDS[seg].base))
             {
-                string[i] = aux;
-                i++;
-                aux = mv->RAM[dirFis + i];
+
+                while (aux != 0x00 && ((dirFis + i) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
+                {
+                    // printf("\nEntroA SYS  %c   DirFis:%d TDSTAM:%d", aux, dirFis + i, (mv->TDS[seg].base + mv->TDS[seg].tam));
+                    //*auxString = aux;
+                    // 0
+                    putchar(aux);
+                    // auxString += 1;
+                    // printf("\nEntroA SYS  %c   DirFis:%d TDSTAM:%d ", aux, dirFis + i, (mv->TDS[seg].base + mv->TDS[seg].tam));
+                    i++;
+                    aux = mv->RAM[dirFis + i];
+                }
             }
-            string[i] = aux;
-            puts(string);
+            if (aux != 0x00)
+            {
+                mv->VecError[2].valor = 1;
+            }
         }
+        break;
+    default:
+        mv->VecError[0].valor = 1;
         break;
     }
 }
