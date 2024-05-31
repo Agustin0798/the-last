@@ -24,8 +24,8 @@ int Errores(MV mv)
 int Ejecuta(MV *mv, CodOpe codigosOperacion[32])
 {
     char Cod, OP1, OP2, inst = 0;
-    int Valor1, Valor2;
-    short int segIP, dirFisIP, offsetIP, ipAct, Iptemp;
+    int Valor1, Valor2, ipAct, Iptemp;
+    short int segIP, dirFisIP, offsetIP;
     segIP = mv->Regs[IP] >> 16;
     offsetIP = mv->Regs[IP] & 0x0000FFFF;
     dirFisIP = mv->TDS[segIP].base + offsetIP;
@@ -49,18 +49,23 @@ int Ejecuta(MV *mv, CodOpe codigosOperacion[32])
             return 1;
         }
         ipAct = mv->Regs[IP];
-        // printf("\nIP ANTES%x", mv->Regs[IP]);
+        // printf("\nIP ANTES%x    IpAct:%x", mv->Regs[IP], ipAct);
         mv->Regs[IP] += 1 + ((~OP1) & 0x03) + ((~OP2) & 0x03);
 
+        // printf("\n%s %x   %x", codigosOperacion[Cod], Valor1, Valor2);
         funcion[Cod](&Valor1, &Valor2, mv);
-        // printf("\nIP DESPUES%x", mv->Regs[IP]);
+        // printf("\n%x", mv->Regs[DS]);
+
+        // printf("\n%s %x   %x", codigosOperacion[Cod], Valor1, Valor2);
+        // printf("\n%x", mv->Regs[EDX]);
         if (Errores(*mv))
         {
             return 1;
         }
         if ((Cod & 0b10000) == 0b00000 && (Cod != 0x06))
         {
-            setOperando(mv, OP1, Valor1, ipAct, (~OP2) & 0x03);
+            // printf("\nCod:%x  llamo a set operando ipTemp:%d ipAct:%x", Cod, (~OP2) & 0x03, ipAct);
+            setOperando(mv, OP1, Valor1, ipAct, ((~OP2) & 0x03));
             if (Cod == 0x03)
                 setOperando(mv, OP2, Valor2, ipAct, 0);
             if (Errores(*mv))

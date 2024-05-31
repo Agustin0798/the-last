@@ -29,8 +29,9 @@ void MOV(int *a, int *b, MV *mv)
 
 void ADD(int *a, int *b, MV *mv)
 {
-
+    printf("\n%x  %x", *a, *b);
     *a += *b;
+    printf("\n%x  %x", *a, *b);
 
     modificaCC(a, mv);
 }
@@ -239,7 +240,7 @@ void SYS(int *a, int *b, MV *mv)
     unsigned int modSys = mv->Regs[EAX] & 0x000000FF;
     int i, j, numero;
     char aux, Op;
-    char *string = NULL, *auxString = NULL;
+    char *string, *auxString = NULL;
     int dato;
     FILE *archIMG;
 
@@ -339,6 +340,7 @@ void SYS(int *a, int *b, MV *mv)
             }
             if (i < cantCel)
             {
+
                 mv->VecError[2].valor = 1;
             }
         }
@@ -383,11 +385,15 @@ void SYS(int *a, int *b, MV *mv)
         offset = dirLog & 0x0000FFFF;
         if (seg < 5)
         {
+            string = (char *)malloc(30 * sizeof(char));
+            scanf("%s", string);
+            printf("\nEntro");
+            printf("\nEntro %s  %d", string, cantCel);
             dirFis = mv->TDS[seg].base + offset;
             if ((dirFis >= mv->TDS[seg].base) && ((dirFis + cantCel) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
             {
+                printf("\nEntro al if");
                 i = 0;
-                scanf("%s", string);
                 while ((i < (cantCel)) && (string[i] != 0x0))
                 {
                     mv->RAM[dirFis + i] = string[i];
@@ -396,6 +402,7 @@ void SYS(int *a, int *b, MV *mv)
                 mv->RAM[dirFis + i] = 0x0;
             }
         }
+        free(string);
         break;
     case 4:
         seg = dirLog >> 16;

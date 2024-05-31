@@ -44,6 +44,7 @@ int leerMemoria(MV *mv, int value)
     }
     else
     {
+
       mv->VecError[2].valor = 1;
       return -1;
     }
@@ -80,6 +81,7 @@ void escribeMemoria(MV *mv, int valor, int parametro)
   }
   else
   {
+
     (*mv).VecError[2].valor = 1;
   }
 }
@@ -110,9 +112,11 @@ int leerRegistro(MV *mv, int value)
 void escribeRegistro(MV *mv, int valor, int parametro)
 {
   char secReg = (parametro >> 4) & 0b11;
+  // printf("\nHola %x", valor);
   switch (secReg)
   {
   case 0:
+
     (*mv).Regs[parametro & 0x0f] = valor;
     break;
   case 1:
@@ -135,7 +139,8 @@ void escribeRegistro(MV *mv, int valor, int parametro)
 void setOperando(MV *mv, char op, int dato, int ipAct, int ipTemp)
 {
   int parametro;
-  parametro = leerParametro(mv, (~op) & 0x03, ipAct, ipTemp);
+  parametro = leerParametro(mv, ((~op) & 0x03), ipAct, ipTemp);
+  // printf("\nParametro: %X", mv->RAM[ipAct]);
   switch (op)
   {
   case 0:
