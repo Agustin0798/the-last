@@ -107,6 +107,7 @@ void muestRegi(char muest[], char *NomReg[][4])
 
     printf("%s", NomReg[reg][seg]);
 }
+
 void muestMem(char muest[], char *NomReg[][4])
 {
     char reg = muest[0] & 0x0F;
@@ -139,9 +140,10 @@ void muestInme(char muest[])
 void Disassembler(MV mv, CodOpe codigosOperacion[])
 {
 
-    int IPaux, i, j, segCS, offsetCS, dirFisCS;
+    int IPaux, i, j, seg, dirFis,tam;
     unsigned char inst, OP1, OP2, Cod;
     char muestra1[3], muestra2[3];
+    char *string;
     char *NomReg[16][4] = {
         {"CS", "", "", ""},
         {"DS", "", "", ""},
@@ -160,17 +162,49 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
         {"EEX", "EL", "EH", "EX"},
         {"EFX", "FL", "FH", "FX"},
     };
-    segCS = mv.Regs[CS] >> 16;
-    offsetCS = mv.Regs[CS] & 0x0000FFFF;
-    IPaux = mv.TDS[segCS].base + offsetCS;
-    while (IPaux < (mv.TDS[segCS].base + mv.TDS[segCS].tam))
+    seg= mv.Regs[KS] >> 16;
+    dirFis= mv.TDS[seg].base;
+    while (dirFis < (mv.TDS[seg].base + mv.TDS[seg].tam))// muestro el ks
+    {
+        inst= mv.RAM[dirFis];
+        printf(" [%04X] %02X ",dirFis, (unsigned) inst);
+        string=NULL;
+        i=1;
+        while (mv.RAM[dirFis+i] != 0x0) // armo el string
+        {
+            tam=strlen(string);
+            string[tam]=mv.RAM[dirFis+i];
+            string[tam+1]=0x00;
+            i++;
+        }
+        tam=strlen(string) + 1;
+        if (tam <= 6) // tengo espacio para mostrar todo el string??
+        {
+            for (i=0; i<tam; i++) //muestro el string completo
+                printf("%02X ",string[i]);
+            if (tam < 6)  //el string ocupo todo el espacio disponible??
+                for (i=tam; i<6; i++) // lleno los espacios no ocupados
+                    printf("   ");
+        }
+        else
+        {
+            for (i=0; i<5; i++)
+                printf("%02X ",string[i]);
+            printf(".. ");
+        }
+        printf("| \"%s\"\n",string);
+    }
+
+    seg = mv.Regs[CS] >> 16;
+    IPaux = mv.TDS[seg].base;
+    while (IPaux < (mv.TDS[seg].base + mv.TDS[seg].tam)) //muestro el cs
     {
         inst = mv.RAM[IPaux];
         Cod = inst & 0b00011111;
         OP1 = (inst >> 4) & 0x03;
         OP2 = (inst >> 6) & 0x03;
 
-        if (IPaux == (mv.TDS[mv.Regs[CS] >> 16].base + mv.header.offsetEP))
+        if (IPaux == (mv.TDS[seg].base + mv.header.offsetEP))
             printf(">[%04X] %02X ", IPaux, (unsigned)inst);
         else
             printf(" [%04X] %02X ", IPaux, (unsigned)inst);
