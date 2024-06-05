@@ -14,6 +14,8 @@ void modificaCC(int *a, MV *mv)
         mv->Regs[CC] = 0x40000000 + (mv->Regs[CC] & 0x3FFFFFFF);
     else
         mv->Regs[CC] = 0x00000000 + (mv->Regs[CC] & 0x3FFFFFFF);
+
+    printf("\nvalores bits:%x\n\nValor *a:%x", (mv->Regs[CC] >> 30) & 0b11, *a);
 }
 
 void VACIO(int *a, int *b, MV *mv)
@@ -29,9 +31,7 @@ void MOV(int *a, int *b, MV *mv)
 
 void ADD(int *a, int *b, MV *mv)
 {
-    printf("\n%x  %x", *a, *b);
     *a += *b;
-    printf("\n%x  %x", *a, *b);
 
     modificaCC(a, mv);
 }
@@ -70,6 +70,7 @@ void SWAP(int *a, int *b, MV *mv)
 
 void CMP(int *a, int *b, MV *mv)
 {
+    printf("\n%d\n", *a - *b);
     int aux = *a - *b;
     modificaCC(&aux, mv);
 }
@@ -387,12 +388,10 @@ void SYS(int *a, int *b, MV *mv)
         {
             string = (char *)malloc(30 * sizeof(char));
             scanf("%s", string);
-            printf("\nEntro");
-            printf("\nEntro %s  %d", string, cantCel);
+            printf("\n%d\n", cantCel);
             dirFis = mv->TDS[seg].base + offset;
             if ((dirFis >= mv->TDS[seg].base) && ((dirFis + cantCel) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
             {
-                printf("\nEntro al if");
                 i = 0;
                 while ((i < (cantCel)) && (string[i] != 0x0))
                 {

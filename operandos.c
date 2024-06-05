@@ -54,11 +54,12 @@ int leerMemoria(MV *mv, int value)
 }
 void escribeMemoria(MV *mv, int valor, int parametro)
 {
-  char s, codReg = (parametro >> 16) & 0x0f, tamEscritura = (~(parametro >> 22) & 0x3) + 1;
+  char s, codReg = (parametro >> 16) & 0x0f, tamEscritura = (~(parametro >> 22) & 0x3);
   int i;
   char offset = 0;
   offset = (parametro & 0x0000ffff);
   int direccionFisica;
+  printf("\n%x   %x", tamEscritura, parametro);
   if (codReg == 0)
   {
     s = mv->Regs[DS] >> 16;
