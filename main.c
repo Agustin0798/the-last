@@ -532,7 +532,6 @@ int main(int argc, char *argv[])
                         else
                         {
                             mv.VecError[4].valor = 1;
-                            printf("%s", mv.VecError[4].descripcion);
                         }
                         iniciaEjecucion(argc, argv, &mv, codigosOperacion);
                     }
