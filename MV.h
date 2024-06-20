@@ -20,7 +20,7 @@
 
 typedef struct Segmentos
 {
-    short int base, tam;
+    unsigned short int base, tam;
 } Segmentos;
 
 typedef struct
@@ -40,7 +40,7 @@ typedef struct MV
     } header;
     short int tamMem;
     char enter;
-    char *imagen;
+    char imagen[20];
     unsigned char RAM[MaxMem];
     int Regs[16];
     Segmentos TDS[5];

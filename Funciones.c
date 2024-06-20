@@ -15,7 +15,7 @@ void modificaCC(int *a, MV *mv)
     else
         mv->Regs[CC] = 0x00000000 + (mv->Regs[CC] & 0x3FFFFFFF);
 
-    printf("\nvalores bits:%x\n\nValor *a:%x", (mv->Regs[CC] >> 30) & 0b11, *a);
+    // printf("\nvalores bits:%x\n\nValor *a:%x", (mv->Regs[CC] >> 30) & 0b11, *a);
 }
 
 void VACIO(int *a, int *b, MV *mv)
@@ -70,7 +70,6 @@ void SWAP(int *a, int *b, MV *mv)
 
 void CMP(int *a, int *b, MV *mv)
 {
-    printf("\n%d\n", *a - *b);
     int aux = *a - *b;
     modificaCC(&aux, mv);
 }
@@ -240,9 +239,10 @@ void SYS(int *a, int *b, MV *mv)
     unsigned int cantCel = mv->Regs[ECX] & 0x000000FF;
     unsigned int modSys = mv->Regs[EAX] & 0x000000FF;
     int i, j, numero;
-    char aux, Op;
-    char *string, *auxString = NULL;
+    char aux, Op, version = 0x01;
+    char *string, *auxString = NULL, car;
     int dato;
+    short int auxImg;
     FILE *archIMG;
 
     switch (*b)
@@ -274,11 +274,47 @@ void SYS(int *a, int *b, MV *mv)
                     }
                     if ((dirFis + tamCel) < (mv->TDS[seg].base + mv->TDS[seg].tam))
                     {
-                        for (j = tamCel - 1; j >= 0; j--)
+                        // for (j = tamCel - 1; j >= 0; j--)
+                        // {
+                        //     mv->RAM[dirFis] = (dato >> (8 * j));
+                        //     dirFis++;
+                        //     printf("\n%x\n", mv->RAM[dirFis]);
+                        // }
+
+                        if (tamCel == 4)
                         {
-                            mv->RAM[dirFis] = (dato >> (8 * j));
-                            dirFis++;
+                            mv->RAM[dirFis] = (dato >> 24) & 0x000000FF;
+                            mv->RAM[dirFis + 1] = (dato >> 16) & 0x000000FF;
+                            mv->RAM[dirFis + 2] = (dato >> 8) & 0x000000FF;
+                            mv->RAM[dirFis + 3] = dato & 0x000000FF;
+
+                            // dato = (dato & 0x00FFFFFF) | (mv->RAM[dirFis] << 24);
+                            // dato = (dato & 0xFF00FFFF) | (mv->RAM[dirFis + 1] << 16);
+                            // dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis + 2] << 8);
+                            // dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis + 3];
                         }
+                        else if (tamCel == 3)
+                        {
+                            mv->RAM[dirFis] = (dato >> 16) & 0x000000FF;
+                            mv->RAM[dirFis + 1] = (dato >> 8) & 0x000000FF;
+                            mv->RAM[dirFis + 2] = dato & 0x000000FF;
+                            // dato = (dato & 0xFF00FFFF) | (mv->RAM[dirFis] << 16);
+                            // dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis + 1] << 8);
+                            // dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis + 2];
+                        }
+                        else if (tamCel == 2)
+                        {
+                            mv->RAM[dirFis] = (dato >> 8) & 0x000000FF;
+                            mv->RAM[dirFis + 1] = dato & 0x000000FF;
+                            // dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis] << 8);
+                            // dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis + 1];
+                        }
+                        else
+                        {
+                            mv->RAM[dirFis] = dato & 0x000000FF;
+                            printf("\n%x\n", mv->RAM[dirFis]);
+                        }
+                        // dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis];
                     }
                     i++;
                 }
@@ -347,58 +383,92 @@ void SYS(int *a, int *b, MV *mv)
         }
         break;
     case 0xF:
-        if (mv->enter == 1)
+        // if (mv->enter == 1)
+        // {
+        archIMG = fopen(mv->imagen, "wb");
+        if (archIMG != NULL)
         {
-            archIMG = fopen(mv->imagen, "Wb");
-            if (archIMG != NULL)
+            fwrite("VMI24", 5, 1, archIMG);
+            fwrite(&version, 1, 1, archIMG);
+            fwrite(&(mv->tamMem), 2, 1, archIMG);
+            j = 0;
+            for (i = 0; i < 16; i++)
             {
-                fwrite("VMI24", 5, 1, archIMG);
-                fwrite("1", 1, 1, archIMG);
-                fwrite(&(mv->tamMem), 2, 1, archIMG);
-                for (i = 0; i < 16; i++)
-                    fwrite(&(mv->Regs[i]), 4, 1, archIMG);
-                for (i = 0; i < 5; i++)
+                fwrite(&(mv->Regs[i]), 4, 1, archIMG);
+                if (i < 5 && (mv->Regs[i] != -1))
+                    j++;
+            }
+            for (i = 0; i < 8; i++)
+            {
+                if (i < j)
                 {
+                    auxImg = mv->TDS[i].base;
                     fwrite(&(mv->TDS[i].base), 2, 1, archIMG);
                     fwrite(&(mv->TDS[i].tam), 2, 1, archIMG);
                 }
-                for (i = 0; i < mv->tamMem; i++)
-                    fwrite(&(mv->RAM[i]), 1, 1, archIMG);
-                fclose(archIMG);
-                switch (getchar())
+                else
                 {
-                case '\n':
-                    mv->enter = 1;
-                    break;
-                case 'q':
-                case 'Q':
-                    mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | mv->tamMem;
-                    break;
-                case 'g':
-                case 'G':
-                    break;
+                    auxImg = 0xFFFF;
+                    fwrite(&auxImg, 2, 2, archIMG);
                 }
             }
+            for (i = 0; i < mv->tamMem; i++)
+                fwrite(&(mv->RAM[i]), 1, 1, archIMG);
+            fclose(archIMG);
+            car = getchar();
+            switch (car)
+            {
+            case '\n':
+                mv->enter = 1;
+                break;
+            case 'q':
+            case 'Q':
+                mv->Regs[IP] = (mv->Regs[IP] & 0xFFFF0000) | mv->tamMem;
+                break;
+            case 'g':
+            case 'G':
+                break;
+            }
         }
+        //}
         break;
     case 3:
-        seg = dirLog >> 16;
+        cantCel = mv->Regs[ECX] & 0x0000ffff;
+        seg = (dirLog >> 16) & 0x0000FFFF;
         offset = dirLog & 0x0000FFFF;
         if (seg < 5)
         {
-            string = (char *)malloc(30 * sizeof(char));
-            scanf("%s", string);
-            printf("\n%d\n", cantCel);
-            dirFis = mv->TDS[seg].base + offset;
-            if ((dirFis >= mv->TDS[seg].base) && ((dirFis + cantCel) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
+            if (cantCel != -1)
             {
-                i = 0;
-                while ((i < (cantCel)) && (string[i] != 0x0))
+
+                string = (char *)malloc(cantCel * sizeof(char));
+                scanf("%s", string);
+                dirFis = mv->TDS[seg].base + offset;
+                if ((dirFis >= mv->TDS[seg].base) && ((dirFis + cantCel) < (mv->TDS[seg].base + mv->TDS[seg].tam)))
                 {
-                    mv->RAM[dirFis + i] = string[i];
-                    i++;
+                    i = 0;
+                    while ((i < (cantCel)) && (string[i] != 0x0))
+                    {
+                        mv->RAM[dirFis + i] = string[i];
+                        i++;
+                    }
+                    mv->RAM[dirFis + i] = 0x0;
                 }
-                mv->RAM[dirFis + i] = 0x0;
+            }
+            else
+            {
+                string = (char *)malloc(MaxMem * sizeof(char));
+                scanf("%s", string);
+                dirFis = mv->TDS[seg].base + offset;
+
+                i = 0;
+                while ((dirFis >= mv->TDS[seg].base && dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && (string[i] != 0x0))
+                {
+                    mv->RAM[dirFis] = string[i];
+                    i++;
+                    dirFis++;
+                }
+                mv->RAM[dirFis + 1] = 0x0;
             }
         }
         free(string);

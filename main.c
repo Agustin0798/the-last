@@ -4,6 +4,7 @@
 #include "Funciones.h"
 #include "MV.h"
 #include "operandos.h"
+#include <ctype.h>
 
 typedef char CodOpe[5];
 
@@ -130,20 +131,22 @@ void muestMem(char muest[], char *NomReg[][4])
     printf("]");
 }
 
-void muestInme(char muest[])
+void muestInme(char muest[], unsigned char inst)
 {
     int num = ((muest[0] << 8) | (muest[1] & 0xff));
-
-    printf("%d", num);
+    if (inst == 0x10)
+        printf("%2X", num);
+    else
+        printf("%d", num);
 }
 
 void Disassembler(MV mv, CodOpe codigosOperacion[])
 {
 
-    int IPaux, i, j, seg, dirFis,tam;
+    int IPaux, i, j, seg, dirFis, tam;
     unsigned char inst, OP1, OP2, Cod;
     char muestra1[3], muestra2[3];
-    char *string;
+    char string[mv.header.tamanios[4]];
     char *NomReg[16][4] = {
         {"CS", "", "", ""},
         {"DS", "", "", ""},
@@ -162,42 +165,46 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
         {"EEX", "EL", "EH", "EX"},
         {"EFX", "FL", "FH", "FX"},
     };
-    seg= mv.Regs[KS] >> 16;
-    dirFis= mv.TDS[seg].base;
-    while (dirFis < (mv.TDS[seg].base + mv.TDS[seg].tam))// muestro el ks
+    seg = mv.Regs[KS] >> 16;
+    dirFis = mv.TDS[seg].base;
+    while (dirFis < (mv.TDS[seg].base + mv.TDS[seg].tam)) // muestro el ks
     {
-        inst= mv.RAM[dirFis];
-        printf(" [%04X] %02X ",dirFis, (unsigned) inst);
-        string=NULL;
-        i=1;
-        while (mv.RAM[dirFis+i] != 0x0) // armo el string
+        printf(" [%04X] ", dirFis);
+        // string = (char *)malloc(sizeof(char) * mv.TDS[seg].tam);
+
+        i = 0;
+        while (mv.RAM[dirFis + i] != 0x0) // armo el string
         {
-            tam=strlen(string);
-            string[tam]=mv.RAM[dirFis+i];
-            string[tam+1]=0x00;
+            string[i] = mv.RAM[dirFis + i];
+            if (i <= 6)
+            {
+                if (i < 6)
+                    printf("%02X ", mv.RAM[dirFis + i]);
+                else if (mv.RAM[dirFis + i] == 0x0)
+                    printf("%02X ", mv.RAM[dirFis + i]);
+                else
+                    printf(".. ");
+            }
+
             i++;
         }
-        tam=strlen(string) + 1;
-        if (tam <= 6) // tengo espacio para mostrar todo el string??
+        string[i] = 0x00;
+        printf("| \"");
+        for (i = 0; i < strlen(string); i++)
         {
-            for (i=0; i<tam; i++) //muestro el string completo
-                printf("%02X ",string[i]);
-            if (tam < 6)  //el string ocupo todo el espacio disponible??
-                for (i=tam; i<6; i++) // lleno los espacios no ocupados
-                    printf("   ");
+            if (isprint(string[i]))
+                printf("%c", string[i]);
+            else
+                printf(".");
         }
-        else
-        {
-            for (i=0; i<5; i++)
-                printf("%02X ",string[i]);
-            printf(".. ");
-        }
-        printf("| \"%s\"\n",string);
+        printf("\"\n");
+        tam = strlen(string) + 1;
+        dirFis += tam;
     }
 
     seg = mv.Regs[CS] >> 16;
     IPaux = mv.TDS[seg].base;
-    while (IPaux < (mv.TDS[seg].base + mv.TDS[seg].tam)) //muestro el cs
+    while (IPaux < (mv.TDS[seg].base + mv.TDS[seg].tam)) // muestro el cs
     {
         inst = mv.RAM[IPaux];
         Cod = inst & 0b00011111;
@@ -235,7 +242,7 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
                 muestMem(muestra1, NomReg);
                 break;
             case 1:
-                muestInme(muestra1);
+                muestInme(muestra1, inst);
                 break;
             case 2:
                 muestRegi(muestra1, NomReg);
@@ -250,7 +257,7 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
                     muestMem(muestra2, NomReg);
                     break;
                 case 1:
-                    muestInme(muestra2);
+                    muestInme(muestra2, inst);
                     break;
                 case 2:
                     muestRegi(muestra2, NomReg);
@@ -265,7 +272,7 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
                 muestMem(muestra2, NomReg);
                 break;
             case 1:
-                muestInme(muestra2);
+                muestInme(muestra2, inst);
                 break;
             case 2:
                 muestRegi(muestra2, NomReg);
@@ -279,6 +286,7 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
 void iniciaEjecucion(int argc, char *argv[], MV *mv, CodOpe codigosOperacion[32])
 {
     int i = 0, bandera = 0;
+    mv->enter = 0;
     while (i < argc && bandera != 1)
     {
         if ((strcmp(argv[i], "-d") == 0) || (strcmp(argv[i], "-D") == 0))
@@ -288,14 +296,13 @@ void iniciaEjecucion(int argc, char *argv[], MV *mv, CodOpe codigosOperacion[32]
         else
             i++;
     }
+    Ejecuta(mv, codigosOperacion);
     if (bandera == 1)
     {
 
         Disassembler(*mv, codigosOperacion);
     }
-    Ejecuta(mv, codigosOperacion);
     i = 0;
-    bandera = 0;
     for (i = 0; i <= 6; i++)
         if (mv->VecError[i].valor == 1)
             printf("\n%s\n", mv->VecError[i].descripcion);
@@ -305,9 +312,10 @@ int main(int argc, char *argv[])
 {
     CodOpe codigosOperacion[32] =
         {"MOV", "ADD", "SUB", "SWAP", "MUL", "DIV", "CMP", "SHL", "SHR", "AND", "OR", "XOR", "RND", "", "", "", "SYS", "JMP", "JZ", "JP", "JN", "JNZ", "JNP", "JNN", "LDL", "LDH", "NOT", "PUSH", "POP", "CALL", "RET", "STOP"};
-    char aux[3];
+    char aux[2];
     int TamC, i, bandera, ultimoIndice, seg;
-    short int tamSegAux;
+    unsigned short int tamSegAux, auxImg;
+    int readReg;
     FILE *arch = NULL;
     MV mv;
     char *encontradoVMX = NULL, *encontradoVMI = NULL;
@@ -329,7 +337,7 @@ int main(int argc, char *argv[])
 
     i = 0;
     mv.tamMem = MaxMem;
-    mv.imagen = NULL;
+    mv.imagen[0] = 0x00;
     while (i < argc)
     {
         encontradoVMX = strstr(argv[i], ".vmx");
@@ -338,6 +346,7 @@ int main(int argc, char *argv[])
         {
 
             strcpy(mv.imagen, argv[i]);
+            printf("\n%s", mv.imagen);
         }
         if (strstr(argv[i], "m="))
         {
@@ -465,33 +474,73 @@ int main(int argc, char *argv[])
     }
     else
     {
-        if (mv.imagen != NULL)
+        if (mv.imagen[0] != 0x00)
         {
             arch = fopen(mv.imagen, "rb");
             if (arch != NULL)
             {
-                fread(mv.header.ident, 1, 5, arch);
+                fread(mv.header.ident, 5, 1, arch);
                 fread(&mv.header.v, 1, 1, arch);
                 fread(aux, 1, 2, arch);
                 mv.tamMem = (aux[0] << 8) | aux[1];
+                printf("\n Header %x %x", mv.header.v, aux[3]);
                 if (strcmp(mv.header.ident, "VMI24") == 0)
+                {
+
                     if (mv.header.v == 0x01)
                     {
+
                         for (i = 0; i <= 15; i++)
                         {
-                            fread(&mv.Regs[i], 1, 4, arch);
+                            fread(&readReg, 1, 4, arch);
+                            mv.Regs[i] = ((readReg >> 24) & 0xff) |    // move byte 3 to byte 0
+                                         ((readReg << 8) & 0xff0000) | // move byte 1 to byte 2
+                                         ((readReg >> 8) & 0xff00) |   // move byte 2 to byte 1
+                                         ((readReg << 24) & 0xff000000);
+                            printf("\nRegs %x", mv.Regs[i]);
                         }
-                        for (i = 0; i <= 4; i++)
+
+                        printf("\nRegsIP %8x", mv.Regs[IP]);
+                        for (i = 0; i <= 7; i++)
                         {
-                            fread(&mv.TDS[i].base, 1, 2, arch);
-                            fread(&mv.TDS[i].tam, 1, 2, arch);
+                            fread(&auxImg, 2, 1, arch);
+                            if (auxImg != 0xffff)
+                            {
+                                mv.TDS[i].base = (auxImg >> 8) | (auxImg << 8);
+
+                                fread(&auxImg, 1, 2, arch);
+                                mv.TDS[i].tam = (auxImg >> 8) | (auxImg << 8);
+                                printf("\nTDS base %2x\n Tam %2x\n", mv.TDS[i].base, mv.TDS[i].tam);
+                                ultimoIndice = i;
+                            }
+                            else
+                            {
+
+                                fread(&auxImg, 2, 1, arch);
+                                printf("\n%x\n", auxImg);
+                            }
                         }
-                        for (i = 0; i < mv.tamMem; i++)
+                        printf("mem nec %x  mem dis %x \n", mv.TDS[ultimoIndice].base + mv.TDS[ultimoIndice].tam, mv.tamMem);
+                        if ((mv.TDS[ultimoIndice].base + mv.TDS[ultimoIndice].tam) <= mv.tamMem)
                         {
-                            fread(&mv.RAM[i], 1, 1, arch);
+
+                            for (i = 0; i < mv.tamMem; i++)
+                            {
+                                fread(&mv.RAM[i], 1, 1, arch);
+                            }
+                        }
+                        else
+                        {
+                            mv.VecError[4].valor = 1;
+                            printf("%s", mv.VecError[4].descripcion);
                         }
                         iniciaEjecucion(argc, argv, &mv, codigosOperacion);
                     }
+                }
+                else
+                {
+                    printf("\nIdentificador invalido");
+                }
             }
         }
     }

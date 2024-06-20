@@ -59,7 +59,6 @@ void escribeMemoria(MV *mv, int valor, int parametro)
   char offset = 0;
   offset = (parametro & 0x0000ffff);
   int direccionFisica;
-  printf("\n%x   %x", tamEscritura, parametro);
   if (codReg == 0)
   {
     s = mv->Regs[DS] >> 16;
