@@ -166,40 +166,48 @@ void Disassembler(MV mv, CodOpe codigosOperacion[])
         {"EFX", "FL", "FH", "FX"},
     };
     seg = mv.Regs[KS] >> 16;
-    dirFis = mv.TDS[seg].base;
-    while (dirFis < (mv.TDS[seg].base + mv.TDS[seg].tam)) // muestro el ks
+    if (mv.Regs[KS] != -1)
     {
-        printf(" [%04X] ", dirFis);
-        // string = (char *)malloc(sizeof(char) * mv.TDS[seg].tam);
-
-        i = 0;
-        while (mv.RAM[dirFis + i] != 0x0) // armo el string
+        dirFis = mv.TDS[seg].base;
+        while (dirFis < (mv.TDS[seg].base + mv.TDS[seg].tam)) // muestro el ks
         {
-            string[i] = mv.RAM[dirFis + i];
-            if (i <= 6)
+            printf(" [%04X] ", dirFis);
+            // string = (char *)malloc(sizeof(char) * mv.TDS[seg].tam);
+
+            i = 0;
+            while (mv.RAM[dirFis + i] != 0x0) // armo el string
             {
-                if (i < 6)
-                    printf("%02X ", mv.RAM[dirFis + i]);
-                else if (mv.RAM[dirFis + i] == 0x0)
-                    printf("%02X ", mv.RAM[dirFis + i]);
-                else
-                    printf(".. ");
-            }
+                string[i] = mv.RAM[dirFis + i];
+                if (i <= 6)
+                {
+                    if (i < 6)
+                        printf("%02X ", mv.RAM[dirFis + i]);
+                    else if (mv.RAM[dirFis + i] == 0x0)
+                        printf("%02X ", mv.RAM[dirFis + i]);
+                    else
+                        printf(".. ");
+                }
 
-            i++;
+                i++;
+            }
+            if (i < 6)
+            {
+                for (int k = i; k <= 6; k++)
+                    printf("   ");
+            }
+            string[i] = 0x00;
+            printf("| \"");
+            for (i = 0; i < strlen(string); i++)
+            {
+                if (isprint(string[i]))
+                    printf("%c", string[i]);
+                else
+                    printf(".");
+            }
+            printf("\"\n");
+            tam = strlen(string) + 1;
+            dirFis += tam;
         }
-        string[i] = 0x00;
-        printf("| \"");
-        for (i = 0; i < strlen(string); i++)
-        {
-            if (isprint(string[i]))
-                printf("%c", string[i]);
-            else
-                printf(".");
-        }
-        printf("\"\n");
-        tam = strlen(string) + 1;
-        dirFis += tam;
     }
 
     seg = mv.Regs[CS] >> 16;
@@ -321,7 +329,7 @@ int main(int argc, char *argv[])
     char *encontradoVMX = NULL, *encontradoVMI = NULL;
     for (i = 0; i <= 4; i++)
     {
-        mv.Regs[i] = -1 << 16;
+        mv.Regs[i] = -1;
     }
     for (i = 0; i < 7; i++)
     {
@@ -346,7 +354,6 @@ int main(int argc, char *argv[])
         {
 
             strcpy(mv.imagen, argv[i]);
-            printf("\n%s", mv.imagen);
         }
         if (strstr(argv[i], "m="))
         {
@@ -483,7 +490,6 @@ int main(int argc, char *argv[])
                 fread(&mv.header.v, 1, 1, arch);
                 fread(aux, 1, 2, arch);
                 mv.tamMem = (aux[0] << 8) | aux[1];
-                printf("\n Header %x %x", mv.header.v, aux[3]);
                 if (strcmp(mv.header.ident, "VMI24") == 0)
                 {
 
@@ -497,10 +503,8 @@ int main(int argc, char *argv[])
                                          ((readReg << 8) & 0xff0000) | // move byte 1 to byte 2
                                          ((readReg >> 8) & 0xff00) |   // move byte 2 to byte 1
                                          ((readReg << 24) & 0xff000000);
-                            printf("\nRegs %x", mv.Regs[i]);
                         }
 
-                        printf("\nRegsIP %8x", mv.Regs[IP]);
                         for (i = 0; i <= 7; i++)
                         {
                             fread(&auxImg, 2, 1, arch);
@@ -510,17 +514,14 @@ int main(int argc, char *argv[])
 
                                 fread(&auxImg, 1, 2, arch);
                                 mv.TDS[i].tam = (auxImg >> 8) | (auxImg << 8);
-                                printf("\nTDS base %2x\n Tam %2x\n", mv.TDS[i].base, mv.TDS[i].tam);
                                 ultimoIndice = i;
                             }
                             else
                             {
 
                                 fread(&auxImg, 2, 1, arch);
-                                printf("\n%x\n", auxImg);
                             }
                         }
-                        printf("mem nec %x  mem dis %x \n", mv.TDS[ultimoIndice].base + mv.TDS[ultimoIndice].tam, mv.tamMem);
                         if ((mv.TDS[ultimoIndice].base + mv.TDS[ultimoIndice].tam) <= mv.tamMem)
                         {
 

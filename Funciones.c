@@ -89,6 +89,7 @@ void OR(int *a, int *b, MV *mv)
 void XOR(int *a, int *b, MV *mv)
 {
     *a ^= *b;
+    printf("\n%x\n", *a);
     modificaCC(a, mv);
 }
 
@@ -180,12 +181,16 @@ void PUSH(int *a, int *b, MV *mv)
 {
     int dirFis, dirLog, seg, offset;
 
-    dirLog = mv->Regs[SP] -= 4;
+    mv->Regs[SP] -= 4;
+    dirLog = mv->Regs[SP];
     seg = (dirLog >> 16) & 0x0000FFFF;
     offset = dirLog & 0x0000FFFF;
     dirFis = mv->TDS[seg].base + offset;
+    printf("\nPUSH %x  %x   %x", seg, mv->TDS[seg].base, dirFis);
     if (dirFis < mv->TDS[seg].base)
+    {
         mv->VecError[5].valor = 1; // se produjo stack overflow
+    }
     else
     {
         mv->RAM[dirFis] = ((*b) >> 24) & 0x000000FF;
@@ -312,7 +317,6 @@ void SYS(int *a, int *b, MV *mv)
                         else
                         {
                             mv->RAM[dirFis] = dato & 0x000000FF;
-                            printf("\n%x\n", mv->RAM[dirFis]);
                         }
                         // dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis];
                     }
@@ -346,17 +350,25 @@ void SYS(int *a, int *b, MV *mv)
                         }
                         else if (tamCel == 3)
                         {
+                            if (mv->RAM[dirFis] & 0b10000000 == 0b10000000)
+                                dato = 0xFF000000;
                             dato = (dato & 0xFF00FFFF) | (mv->RAM[dirFis] << 16);
                             dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis + 1] << 8);
                             dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis + 2];
                         }
                         else if (tamCel == 2)
                         {
+                            if (mv->RAM[dirFis] & 0b10000000 == 0b10000000)
+                                dato = 0xFFFF0000;
                             dato = (dato & 0xFFFF00FF) | (mv->RAM[dirFis] << 8);
                             dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis + 1];
                         }
                         else
+                        {
+                            if (mv->RAM[dirFis] & 0b10000000 == 0b10000000)
+                                dato = 0xFFFFFF00;
                             dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis];
+                        }
                         switch (modSys)
                         {
                         case 1:
@@ -433,7 +445,7 @@ void SYS(int *a, int *b, MV *mv)
         //}
         break;
     case 3:
-        cantCel = mv->Regs[ECX] & 0x0000ffff;
+        cantCel = (short int)(mv->Regs[ECX] & 0x0000ffff);
         seg = (dirLog >> 16) & 0x0000FFFF;
         offset = dirLog & 0x0000FFFF;
         if (seg < 5)
@@ -460,7 +472,6 @@ void SYS(int *a, int *b, MV *mv)
                 string = (char *)malloc(MaxMem * sizeof(char));
                 scanf("%s", string);
                 dirFis = mv->TDS[seg].base + offset;
-
                 i = 0;
                 while ((dirFis >= mv->TDS[seg].base && dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && (string[i] != 0x0))
                 {
@@ -489,7 +500,7 @@ void SYS(int *a, int *b, MV *mv)
                     // printf("\nEntroA SYS  %c   DirFis:%d TDSTAM:%d", aux, dirFis + i, (mv->TDS[seg].base + mv->TDS[seg].tam));
                     //*auxString = aux;
                     // 0
-                    putchar(aux);
+                    printf("%c", aux);
                     // auxString += 1;
                     // printf("\nEntroA SYS  %c   DirFis:%d TDSTAM:%d ", aux, dirFis + i, (mv->TDS[seg].base + mv->TDS[seg].tam));
                     i++;
@@ -501,6 +512,9 @@ void SYS(int *a, int *b, MV *mv)
                 mv->VecError[2].valor = 1;
             }
         }
+        break;
+    case 7:
+        system("cls");
         break;
     default:
         mv->VecError[0].valor = 1;

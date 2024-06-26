@@ -26,7 +26,7 @@ int leerParametro(MV *mv, char op, int ipAct, int ipTemp)
 }
 int leerMemoria(MV *mv, int value)
 {
-  char tamLectura = value >> 20;
+  char tamLectura = ((~(value >> 22) & 0x3) + 1);
   char codReg = (value >> 16) & 0x0f;
   char offset = value & 0x00ffff;
   int i, aux, dato = 0;
@@ -34,27 +34,44 @@ int leerMemoria(MV *mv, int value)
   char s;
   s = mv->Regs[codReg] >> 16;
   int direccionFisica = mv->TDS[s].base + (mv->Regs[codReg] & 0x0000ffff) + offset;
-  for (i = 3; i >= 0; i--)
-  {
-    if (mv->TDS[s].base <= direccionFisica && direccionFisica < mv->TDS[s].base + mv->TDS[s].tam)
-    {
-      aux = mv->RAM[direccionFisica];
-      dato |= (aux << i * 8);
-      direccionFisica++;
-    }
-    else
-    {
+  // for (i = 3; i >= 0; i--)
+  // {
+  //   if (mv->TDS[s].base <= direccionFisica && direccionFisica < mv->TDS[s].base + mv->TDS[s].tam)
+  //   {
+  //     aux = mv->RAM[direccionFisica];
+  //     dato |= (aux << i * 8);
+  //     direccionFisica++;
+  //   }
+  //   else
+  //   {
 
-      mv->VecError[2].valor = 1;
-      return -1;
-    }
+  //     mv->VecError[2].valor = 1;
+  //     return -1;
+  //   }
+  // }
+
+  if (tamLectura == 4)
+  {
+    dato = (dato & 0x00FFFFFF) | (mv->RAM[direccionFisica] << 24);
+    dato = (dato & 0xFF00FFFF) | (mv->RAM[direccionFisica + 1] << 16);
+    dato = (dato & 0xFFFF00FF) | (mv->RAM[direccionFisica + 2] << 8);
+    dato = (dato & 0xFFFFFF00) | mv->RAM[direccionFisica + 3];
+  }
+  else if (tamLectura == 2)
+  {
+    dato = (dato & 0xFFFF00FF) | (mv->RAM[direccionFisica] << 8);
+    dato = (short int)((dato & 0xFFFFFF00) | mv->RAM[direccionFisica + 1]);
+  }
+  else
+  {
+    dato = (char)((dato & 0xFFFFFF00) | mv->RAM[direccionFisica]);
   }
 
   return dato;
 }
 void escribeMemoria(MV *mv, int valor, int parametro)
 {
-  char s, codReg = (parametro >> 16) & 0x0f, tamEscritura = (~(parametro >> 22) & 0x3);
+  char s, codReg = (parametro >> 16) & 0x0f, tamEscritura = ((~(parametro >> 22) & 0x3) + 1);
   int i;
   char offset = 0;
   offset = (parametro & 0x0000ffff);
@@ -87,7 +104,7 @@ void escribeMemoria(MV *mv, int valor, int parametro)
 }
 int inmediato(MV mv, int value)
 {
-  return value;
+  return (short int)value;
 }
 
 int leerRegistro(MV *mv, int value)
@@ -165,7 +182,7 @@ int getOperando(MV *mv, char op, int ipAct, int ipTemp)
     break;
 
   case 1:
-    value = (parametro);
+    value = (short)(parametro);
 
     break;
 
