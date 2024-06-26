@@ -392,9 +392,10 @@ int main(int argc, char *argv[])
                     mv.TDS[0].base = 0;
                     mv.TDS[0].tam = TamC;
                     mv.TDS[1].base = TamC;
-                    mv.header.tamanios[DS] = mv.TDS[1].tam = mv.tamMem - TamC;
-
-                    mv.Regs[CS] = mv.Regs[IP] = 0;
+                    mv.header.tamanios[DS] = mv.tamMem - TamC;
+                    mv.TDS[1].tam = mv.tamMem - TamC;
+                    mv.Regs[IP] = 0;
+                    mv.Regs[CS] = 0;
                     mv.Regs[DS] = 0x00010000;
                 }
                 else // v2
@@ -489,7 +490,7 @@ int main(int argc, char *argv[])
                 fread(mv.header.ident, 5, 1, arch);
                 fread(&mv.header.v, 1, 1, arch);
                 fread(aux, 1, 2, arch);
-                mv.tamMem = (aux[0] << 8) | aux[1];
+                mv.tamMem = (aux[1] << 8) | aux[0];
                 if (strcmp(mv.header.ident, "VMI24") == 0)
                 {
 

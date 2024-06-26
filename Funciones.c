@@ -88,8 +88,7 @@ void OR(int *a, int *b, MV *mv)
 
 void XOR(int *a, int *b, MV *mv)
 {
-    *a ^= *b;
-    printf("\n%x\n", *a);
+    *a ^= (*b);
     modificaCC(a, mv);
 }
 
@@ -186,7 +185,7 @@ void PUSH(int *a, int *b, MV *mv)
     seg = (dirLog >> 16) & 0x0000FFFF;
     offset = dirLog & 0x0000FFFF;
     dirFis = mv->TDS[seg].base + offset;
-    printf("\nPUSH %x  %x   %x", seg, mv->TDS[seg].base, dirFis);
+    //printf("\nPUSH %x  %x   %x", seg, mv->TDS[seg].base, dirFis);
     if (dirFis < mv->TDS[seg].base)
     {
         mv->VecError[5].valor = 1; // se produjo stack overflow
@@ -247,7 +246,7 @@ void SYS(int *a, int *b, MV *mv)
     int i, j, numero;
     char aux, Op, version = 0x01;
     char *string, *auxString = NULL, car;
-    int dato;
+    long int dato;
     short int auxImg;
     FILE *archIMG;
 
@@ -256,6 +255,7 @@ void SYS(int *a, int *b, MV *mv)
     case 1:
         seg = dirLog >> 16;
         offset = dirLog & 0x0000FFFF;
+
         if (seg < 5)
         {
             dirFis = mv->TDS[seg].base + offset;
@@ -263,20 +263,22 @@ void SYS(int *a, int *b, MV *mv)
             if (dirFis >= mv->TDS[seg].base)
 
                 while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
-                {
+                {   
+                    printf(" [%04X] ", dirFis);
                     switch (modSys)
                     {
                     case 1:
-                        scanf(" %d", &dato);
+                        scanf(" %ld", &dato);
                         break;
                     case 2:
-                        scanf(" %c", &dato);
+                        scanf(" %lc", &dato);
                         break;
                     case 4:
-                        scanf(" %o", &dato);
+                        scanf(" %lo", &dato);
                         break;
                     case 8:
-                        scanf(" %x", &dato);
+                        scanf(" %lx", &dato);
+                        break;
                     }
                     if ((dirFis + tamCel) < (mv->TDS[seg].base + mv->TDS[seg].tam))
                     {
@@ -317,7 +319,7 @@ void SYS(int *a, int *b, MV *mv)
                         }
                         else
                         {
-                            mv->RAM[dirFis] = dato & 0x000000FF;
+                            mv->RAM[dirFis] = dato & 0x000000FF;;
                         }
                         // dato = (dato & 0xFFFFFF00) | mv->RAM[dirFis];
                     }
@@ -339,6 +341,7 @@ void SYS(int *a, int *b, MV *mv)
 
                 while ((dirFis < (mv->TDS[seg].base + mv->TDS[seg].tam)) && i < cantCel)
                 {
+                    printf(" [%04X] ", dirFis);
                     dato = 0;
                     if ((dirFis + tamCel) < (mv->TDS[seg].base + mv->TDS[seg].tam))
                     {
@@ -501,7 +504,7 @@ void SYS(int *a, int *b, MV *mv)
                     // printf("\nEntroA SYS  %c   DirFis:%d TDSTAM:%d", aux, dirFis + i, (mv->TDS[seg].base + mv->TDS[seg].tam));
                     //*auxString = aux;
                     // 0
-                    printf("%c", aux);
+                    putchar(aux);
                     // auxString += 1;
                     // printf("\nEntroA SYS  %c   DirFis:%d TDSTAM:%d ", aux, dirFis + i, (mv->TDS[seg].base + mv->TDS[seg].tam));
                     i++;

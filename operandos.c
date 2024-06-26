@@ -56,6 +56,7 @@ int leerMemoria(MV *mv, int value)
     dato = (dato & 0xFF00FFFF) | (mv->RAM[direccionFisica + 1] << 16);
     dato = (dato & 0xFFFF00FF) | (mv->RAM[direccionFisica + 2] << 8);
     dato = (dato & 0xFFFFFF00) | mv->RAM[direccionFisica + 3];
+
   }
   else if (tamLectura == 2)
   {
@@ -88,13 +89,45 @@ void escribeMemoria(MV *mv, int valor, int parametro)
   if (((*mv).TDS[s].base <= direccionFisica) && ((direccionFisica + tamEscritura) < (*mv).TDS[s].base + (*mv).TDS[s].tam))
   {
 
-    for (i = tamEscritura - 1; i >= 0; i--)
+   /* for (i = tamEscritura - 1; i >= 0; i--)
     {
       mv->RAM[direccionFisica] = 0;
 
       mv->RAM[direccionFisica] |= (unsigned char)(((valor >> (8 * i)) & 0xFF));
       direccionFisica++;
-    }
+    }*/
+    if (tamEscritura == 4)
+                        {
+                            mv->RAM[direccionFisica] = (valor >> 24) & 0x000000FF;
+                            mv->RAM[direccionFisica + 1] = (valor >> 16) & 0x000000FF;
+                            mv->RAM[direccionFisica + 2] = (valor >> 8) & 0x000000FF;
+                            mv->RAM[direccionFisica + 3] = valor & 0x000000FF;
+
+                            // valor = (valor & 0x00FFFFFF) | (mv->RAM[direccionFisica] << 24);
+                            // valor = (valor & 0xFF00FFFF) | (mv->RAM[direccionFisica + 1] << 16);
+                            // valor = (valor & 0xFFFF00FF) | (mv->RAM[direccionFisica + 2] << 8);
+                            // valor = (valor & 0xFFFFFF00) | mv->RAM[direccionFisica + 3];
+                        }
+                        else if (tamEscritura == 3)
+                        {
+                            mv->RAM[direccionFisica] = (valor >> 16) & 0x000000FF;
+                            mv->RAM[direccionFisica + 1] = (valor >> 8) & 0x000000FF;
+                            mv->RAM[direccionFisica + 2] = valor & 0x000000FF;
+                            // valor = (valor & 0xFF00FFFF) | (mv->RAM[direccionFisica] << 16);
+                            // valor = (valor & 0xFFFF00FF) | (mv->RAM[direccionFisica + 1] << 8);
+                            // valor = (valor & 0xFFFFFF00) | mv->RAM[direccionFisica + 2];
+                        }
+                        else if (tamEscritura == 2)
+                        {
+                            mv->RAM[direccionFisica] = (valor >> 8) & 0x000000FF;
+                            mv->RAM[direccionFisica + 1] = valor & 0x000000FF;
+                            // valor = (valor & 0xFFFF00FF) | (mv->RAM[direccionFisica] << 8);
+                            // valor = (valor & 0xFFFFFF00) | mv->RAM[direccionFisica + 1];
+                        }
+                        else
+                        {
+                            mv->RAM[direccionFisica] = valor & 0x000000FF;;
+                        }
   }
   else
   {
