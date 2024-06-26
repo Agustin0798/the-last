@@ -204,7 +204,8 @@ void POP(int *a, int *b, MV *mv)
 {
     int dirFis, dirLog, seg, offset, dato;
 
-    dirLog = mv->Regs[SP] += 4;
+    mv->Regs[SP] += 4;
+    dirLog = mv->Regs[SP];
     seg = (dirLog >> 16) & 0x0000FFFF;
     offset = dirLog & 0x0000FFFF;
     dirFis = mv->TDS[seg].base + offset;
